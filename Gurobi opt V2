@@ -1,0 +1,458 @@
+import pandas as pd
+import gurobipy as gp
+from gurobipy import GRB
+from itertools import combinations, permutations
+
+# ============================================================
+# 1. LOAD WORKBOOK
+# ============================================================
+
+file = "/Users/dumani/Desktop/Mcgill 2026-2027/MGSC404/project1_simplified.xlsx"
+
+shipments = pd.read_excel(file, sheet_name="shipments")
+facilities = pd.read_excel(file, sheet_name="facilities")
+distances = pd.read_excel(file, sheet_name="distance_matrix")
+ltl_rates = pd.read_excel(file, sheet_name="ltl_rates")
+tl_costs = pd.read_excel(file, sheet_name="tl_costs")
+equipment = pd.read_excel(file, sheet_name="equipment")
+tractors = pd.read_excel(file, sheet_name="tractors")
+depots = pd.read_excel(file, sheet_name="depots")
+driver_rules = pd.read_excel(file, sheet_name="driver_rules")
+parameters = pd.read_excel(file, sheet_name="parameters")
+
+# Dictionaries
+S = shipments.set_index("shipment_id").to_dict("index")
+F = facilities.set_index("facility_id").to_dict("index")
+D = depots.set_index("depot_id").to_dict("index")
+E = equipment.set_index("equipment_id").to_dict("index")
+TR = tractors.set_index("tractor_id").to_dict("index")
+TC = tl_costs.set_index("equipment_id").to_dict("index")
+
+I = shipments["shipment_id"].tolist()
+K = tractors["tractor_id"].tolist()
+T = sorted(shipments["day"].unique().tolist())
+
+rules = driver_rules.set_index("parameter")["value"].to_dict()
+params = parameters.set_index("parameter")["value"].to_dict()
+
+MAX_DRIVE = rules["max_drive_hours"]
+MAX_DUTY = rules["max_duty_hours"]
+MAX_EVENTS = int(params["max_stops"])
+TIME_STEP = params["time_step_hours"]
+SPEED = params["average_speed_mph"]
+LIFO = int(params["lifo_required"])
+
+# ============================================================
+# 2. DISTANCE AND DRIVE-TIME LOOKUPS
+# ============================================================
+
+dist = {}
+drive = {}
+
+for _, row in distances.iterrows():
+    a, b = row["from_id"], row["to_id"]
+    dist[a, b] = row["distance_miles"]
+    drive[a, b] = row["drive_hours"]
+
+def leg(a, b):
+    """Return miles and driving hours for a directed lane."""
+    if (a, b) not in dist:
+        raise KeyError(f"Missing lane in distance_matrix: {a} -> {b}")
+    return dist[a, b], drive[a, b]
+
+# ============================================================
+# 3. LTL COST
+# ============================================================
+
+def get_ltl_cost(i):
+    s = S[i]
+    miles, _ = leg(s["origin_id"], s["destination_id"])
+
+    match = ltl_rates[
+        (ltl_rates["freight_class"] == s["freight_class"])
+        & (ltl_rates["weight_from_lb"] <= s["weight_lb"])
+        & (s["weight_lb"] < ltl_rates["weight_to_lb"])
+        & (ltl_rates["distance_from_miles"] <= miles)
+        & (miles < ltl_rates["distance_to_miles"])
+    ]
+
+    if match.empty:
+        raise ValueError(f"No LTL rate found for shipment {i}")
+
+    rate = match.iloc[0]
+    return rate["base_cost_cad"] * (1 + rate["fuel_surcharge_pct"])
+
+ltl_cost = {i: get_ltl_cost(i) for i in I}
+
+# ============================================================
+# 4. ROUTE FEASIBILITY CHECKER
+# ============================================================
+
+def check_route(shipment_group, tractor_id, day, event_order):
+    """
+    event_order is a sequence like:
+    [('P', 'S001'), ('P', 'S002'), ('D', 'S001'), ('D', 'S002')]
+
+    P = pickup, D = delivery
+    Departure is set to the driver's shift start.
+    """
+
+    tractor = TR[tractor_id]
+    equipment_id = tractor["equipment_id"]
+    cap = E[equipment_id]
+    home = tractor["home_depot_id"]
+
+    # Shipment day consistency
+    if any(int(S[i]["day"]) != int(day) for i in shipment_group):
+        return None
+
+    # Service-event limit
+    if len(event_order) > MAX_EVENTS:
+        return None
+
+    # All shipments on the tour must have matching temperature
+    # and compatibility group, per the simplified README.
+    temps = {S[i]["temperature"] for i in shipment_group}
+    groups = {S[i]["compatibility_group"] for i in shipment_group}
+
+    if len(temps) > 1 or len(groups) > 1:
+        return None
+
+    if "chilled" in temps and cap["chilled_capable"] != 1:
+        return None
+
+    # Departure time: fixed shift start on the shipment day
+    shift_start = day * 24 + tractor["shift_start_hour"]
+    shift_end = day * 24 + tractor["shift_end_hour"]
+
+    # Depot must be open at departure
+    depot_open = day * 24 + D[home]["open_hour"]
+    depot_close = day * 24 + D[home]["close_hour"]
+
+    depart = max(shift_start, depot_open)
+    if depart >= min(shift_end, depot_close):
+        return None
+
+    now = depart
+    current = home
+    total_drive = 0
+    miles = 0
+
+    # Onboard freight resource usage
+    weight = 0
+    feet = 0
+    pallets = 0
+
+    picked = set()
+    delivered = set()
+
+    for event_type, i in event_order:
+
+        s = S[i]
+
+        # Pickup event
+        if event_type == "P":
+
+            if i in picked:
+                return None
+
+            # Cannot pick up after delivery
+            if i in delivered:
+                return None
+
+            next_location = s["origin_id"]
+            service = s["pickup_service_hours"]
+
+        # Delivery event
+        else:
+
+            # Pickup must occur first
+            if i not in picked:
+                return None
+
+            if i in delivered:
+                return None
+
+            next_location = s["destination_id"]
+            service = s["delivery_service_hours"]
+
+        # Travel to next stop
+        try:
+            miles_leg, drive_leg = leg(current, next_location)
+        except KeyError:
+            return None
+
+        total_drive += drive_leg
+        miles += miles_leg
+        now += drive_leg
+
+        if total_drive > MAX_DRIVE:
+            return None
+
+        # Facility hours
+        facility = F[next_location]
+        facility_open = day * 24 + facility["open_hour"]
+        facility_close = day * 24 + facility["close_hour"]
+
+        # Shipment-specific window
+        if event_type == "P":
+            window_open = day * 24 + s["pickup_open_hour"]
+            window_close = day * 24 + s["pickup_close_hour"]
+        else:
+            window_open = day * 24 + s["delivery_open_hour"]
+            window_close = day * 24 + s["delivery_close_hour"]
+
+        service_start = max(now, facility_open, window_open)
+
+        # Handling must finish by both closing times
+        if service_start + service > min(facility_close, window_close):
+            return None
+
+        # Waiting is duty time, not automatically a break
+        now = service_start + service
+
+        # Update freight on board after the event
+        if event_type == "P":
+
+            weight += s["weight_lb"]
+            feet += s["linear_feet"]
+            pallets += s["pallets"]
+            picked.add(i)
+
+        else:
+
+            weight -= s["weight_lb"]
+            feet -= s["linear_feet"]
+            pallets -= s["pallets"]
+            delivered.add(i)
+
+        # Capacity after every event
+        if weight > cap["weight_capacity_lb"]:
+            return None
+
+        if feet > cap["length_capacity_feet"]:
+            return None
+
+        if pallets > cap["pallet_capacity"]:
+            return None
+
+        current = next_location
+
+    # All shipments must be delivered
+    if delivered != set(shipment_group):
+        return None
+
+    # Return to home depot
+    try:
+        return_miles, return_drive = leg(current, home)
+    except KeyError:
+        return None
+
+    total_drive += return_drive
+    miles += return_miles
+    now += return_drive
+
+    if total_drive > MAX_DRIVE:
+        return None
+
+    # Tour must finish within driver shift and depot hours
+    if now > shift_end:
+        return None
+
+    if now > day * 24 + D[home]["close_hour"]:
+        return None
+
+    duty = now - depart
+
+    if duty > MAX_DUTY:
+        return None
+
+    # Side access in simplified file; no LIFO rehandling.
+    # All service events are already counted in the event limit.
+
+    # Cost: max(minimum linehaul, all route miles * mileage rate)
+    costs = TC[equipment_id]
+
+    linehaul = max(
+        costs["minimum_linehaul_cad"],
+        miles * costs["linehaul_cad_per_mile"]
+    )
+
+    extra_stops = max(0, len(event_order) - 2)
+    stop_cost = extra_stops * costs["extra_stop_cad"]
+
+    return {
+        "shipments": tuple(sorted(shipment_group)),
+        "tractor": tractor_id,
+        "day": day,
+        "events": tuple(event_order),
+        "miles": miles,
+        "drive_hours": total_drive,
+        "duty_hours": duty,
+        "departure": depart,
+        "return_time": now,
+        "cost": linehaul + stop_cost
+    }
+
+# ============================================================
+# 5. GENERATE CANDIDATE TOURS
+# ============================================================
+
+routes = []
+route_id = 0
+
+# Generate shipment groups of size 1, 2, or 3.
+# Each shipment has a pickup event and a delivery event.
+for day in T:
+
+    shipments_today = [
+        i for i in I if int(S[i]["day"]) == int(day)
+    ]
+
+    for size in range(1, min(3, len(shipments_today)) + 1):
+
+        for group in combinations(shipments_today, size):
+
+            # Enumerate all pickup/delivery event sequences
+            events = [
+                (event, i)
+                for i in group
+                for event in ["P", "D"]
+            ]
+
+            for order in permutations(events):
+
+                # Pickup must precede delivery for every shipment
+                valid_precedence = True
+
+                for i in group:
+                    pickup_position = order.index(("P", i))
+                    delivery_position = order.index(("D", i))
+
+                    if pickup_position > delivery_position:
+                        valid_precedence = False
+                        break
+
+                if not valid_precedence:
+                    continue
+
+                # Test this route with each tractor-driver pair
+                for k in K:
+
+                    result = check_route(
+                        group,
+                        k,
+                        day,
+                        order
+                    )
+
+                    if result is not None:
+                        result["route_id"] = route_id
+                        routes.append(result)
+                        route_id += 1
+
+print("Candidate tours generated:", len(routes))
+
+# ============================================================
+# 6. GUROBI ROUTE-SELECTION MODEL
+# ============================================================
+
+model = gp.Model("Consolidation_Route_Selection")
+
+R = list(range(len(routes)))
+
+# y[r] = 1 if candidate route r is selected
+y = model.addVars(R, vtype=GRB.BINARY, name="select_route")
+
+# z[i] = 1 if shipment i is sent by LTL
+z = model.addVars(I, vtype=GRB.BINARY, name="LTL")
+
+# Objective: TL route costs + LTL costs
+model.setObjective(
+    gp.quicksum(routes[r]["cost"] * y[r] for r in R)
+    +
+    gp.quicksum(ltl_cost[i] * z[i] for i in I),
+    GRB.MINIMIZE
+)
+
+# Every shipment is served exactly once
+for i in I:
+
+    model.addConstr(
+        gp.quicksum(
+            y[r]
+            for r in R
+            if i in routes[r]["shipments"]
+        )
+        + z[i] == 1,
+        name=f"shipment_once_{i}"
+    )
+
+# At most one tour per tractor-driver pair per day
+for k in K:
+    for day in T:
+
+        model.addConstr(
+            gp.quicksum(
+                y[r]
+                for r in R
+                if routes[r]["tractor"] == k
+                and routes[r]["day"] == day
+            ) <= 1,
+            name=f"one_tour_{k}_{day}"
+        )
+
+# Solve
+model.Params.OutputFlag = 1
+model.optimize()
+
+# ============================================================
+# 7. DISPLAY SOLUTION
+# ============================================================
+
+if model.SolCount > 0:
+
+    print("\nTotal optimized cost:", model.ObjVal)
+
+    selected_routes = []
+
+    for r in R:
+
+        if y[r].X > 0.5:
+
+            route = routes[r]
+            selected_routes.append(route)
+
+            print("\n----------------------------------")
+            print("Tractor-driver:", route["tractor"])
+            print("Day:", route["day"])
+            print("Shipments:", route["shipments"])
+            print("Stops:", route["events"])
+            print("Miles:", route["miles"])
+            print("Driving hours:", route["drive_hours"])
+            print("Duty hours:", route["duty_hours"])
+            print("Route cost:", route["cost"])
+
+    print("\nShipments sent by LTL:")
+
+    for i in I:
+        if z[i].X > 0.5:
+            print(i, "LTL cost:", ltl_cost[i])
+
+else:
+    print("No feasible solution found.")
+    print("Gurobi status:", model.Status)
+
+
+# check is savings
+
+all_ltl_cost = sum(ltl_cost[i] for i in I)
+
+if model.SolCount > 0:
+    savings = all_ltl_cost - model.ObjVal
+    savings_pct = 100 * savings / all_ltl_cost
+
+    print("\nAll-LTL baseline:", all_ltl_cost)
+    print("Optimized cost:", model.ObjVal)
+    print("Savings:", savings)
+    print("Savings (%):", savings_pct)
