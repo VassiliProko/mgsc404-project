@@ -1,0 +1,257 @@
+import pandas as pd
+import gurobipy as gp
+from gurobipy import GRB
+
+# ============================================================
+# 1. LOAD DATA
+# ============================================================
+
+file = '/Users/dumani/Desktop/Mcgill 2026-2027/MGSC404/project1_simplified.xlsx'
+
+shipments = pd.read_excel(file, sheet_name="shipments")
+tractors = pd.read_excel(file, sheet_name="tractors")
+equipment = pd.read_excel(file, sheet_name="equipment")
+tl_costs = pd.read_excel(file, sheet_name="tl_costs")
+ltl_rates = pd.read_excel(file, sheet_name="ltl_rates")
+distances = pd.read_excel(file, sheet_name="distance_matrix")
+
+# Sets
+I = shipments["shipment_id"].tolist()
+K = tractors["tractor_id"].tolist()
+T = sorted(shipments["day"].unique().tolist())
+
+# Lookup dictionaries
+shipment_data = shipments.set_index("shipment_id").to_dict("index")
+tractor_data = tractors.set_index("tractor_id").to_dict("index")
+equipment_data = equipment.set_index("equipment_id").to_dict("index")
+
+# ============================================================
+# 2. CALCULATE LTL COST FOR EACH SHIPMENT
+# ============================================================
+
+# Direct origin-to-destination distance
+distance_dict = {
+    (row["from_id"], row["to_id"]): row["distance_miles"]
+    for _, row in distances.iterrows()
+}
+
+def calculate_ltl_cost(shipment_id):
+
+    s = shipment_data[shipment_id]
+
+    origin = s["origin_id"]
+    destination = s["destination_id"]
+
+    distance = distance_dict[(origin, destination)]
+
+    # Find the matching LTL rate
+    matching_rates = ltl_rates[
+        (ltl_rates["freight_class"] == s["freight_class"])
+        & (ltl_rates["weight_from_lb"] <= s["weight_lb"])
+        & (s["weight_lb"] < ltl_rates["weight_to_lb"])
+        & (ltl_rates["distance_from_miles"] <= distance)
+        & (distance < ltl_rates["distance_to_miles"])
+    ]
+
+    if matching_rates.empty:
+        raise ValueError(
+            f"No LTL rate found for shipment {shipment_id}"
+        )
+
+    rate = matching_rates.iloc[0]
+
+    return rate["base_cost_cad"] * (
+        1 + rate["fuel_surcharge_pct"]
+    )
+
+# Store each shipment's LTL cost
+ltl_cost = {
+    i: calculate_ltl_cost(i)
+    for i in I
+}
+
+# ============================================================
+# 3. PREPARE TRUCK COSTS AND CAPACITIES
+# ============================================================
+
+# One cost/capacity record per equipment type
+tl_cost_dict = tl_costs.set_index("equipment_id").to_dict("index")
+
+# ============================================================
+# 4. CREATE GUROBI MODEL
+# ============================================================
+
+model = gp.Model("Shipment_Assignment")
+
+# x[i,k,t] = 1 if shipment i uses tractor-driver pair k on day t
+# z[i] = 1 if shipment i is sent by LTL
+# y[k,t] = 1 if tractor-driver pair k is used on day t
+
+x = model.addVars(I, K, T, vtype=GRB.BINARY, name="assign")
+z = model.addVars(I, vtype=GRB.BINARY, name="LTL")
+y = model.addVars(K, T, vtype=GRB.BINARY, name="truck_used")
+
+# ============================================================
+# 5. OBJECTIVE: MINIMIZE ASSIGNMENT COST
+# ============================================================
+
+# Truck activation cost proxy:
+# minimum linehaul cost for each used tractor-driver pair/day
+truck_cost = {}
+
+for k in K:
+    equip_id = tractor_data[k]["equipment_id"]
+
+    truck_cost[k] = tl_cost_dict[equip_id][
+        "minimum_linehaul_cad"
+    ]
+
+model.setObjective(
+    gp.quicksum(
+        truck_cost[k] * y[k, t]
+        for k in K
+        for t in T
+    )
+    +
+    gp.quicksum(
+        ltl_cost[i] * z[i]
+        for i in I
+    ),
+    GRB.MINIMIZE
+)
+
+# ============================================================
+# 6. EACH SHIPMENT MUST BE ASSIGNED EXACTLY ONCE
+# ============================================================
+
+for i in I:
+
+    shipment_day = int(shipment_data[i]["day"])
+
+    model.addConstr(
+        gp.quicksum(
+            x[i, k, t]
+            for k in K
+            for t in T
+            if t == shipment_day
+        )
+        + z[i] == 1,
+        name=f"assign_once_{i}"
+    )
+
+# ============================================================
+# 7. TRUCK CAPACITY CONSTRAINTS
+# ============================================================
+
+for k in K:
+    equip_id = tractor_data[k]["equipment_id"]
+    cap = equipment_data[equip_id]
+
+    for t in T:
+
+        # Weight capacity
+        model.addConstr(
+            gp.quicksum(
+                shipment_data[i]["weight_lb"] * x[i, k, t]
+                for i in I
+            )
+                <= cap["weight_capacity_lb"] * y[k, t],
+            name=f"weight_{k}_{t}"
+        )
+
+        # Floor length capacity
+        model.addConstr(
+            gp.quicksum(
+                shipment_data[i]["linear_feet"] * x[i, k, t]
+                for i in I
+            )
+                <= cap["length_capacity_feet"] * y[k, t],
+            name=f"length_{k}_{t}"
+        )
+
+        # Pallet capacity
+        model.addConstr(
+            gp.quicksum(
+                shipment_data[i]["pallets"] * x[i, k, t]
+                for i in I
+            )
+                <= cap["pallet_capacity"] * y[k, t],
+            name=f"pallets_{k}_{t}"
+        )
+
+# ============================================================
+# 8. LINK SHIPMENTS TO TRUCK ACTIVATION
+# ============================================================
+
+for i in I:
+    for k in K:
+        for t in T:
+
+            # A shipment can only use an activated truck
+            model.addConstr(
+                x[i, k, t] <= y[k, t],
+                name=f"link_{i}_{k}_{t}"
+            )
+
+# ============================================================
+# 9. EQUIPMENT COMPATIBILITY
+# ============================================================
+
+for i in I:
+    for k in K:
+
+        equip_id = tractor_data[k]["equipment_id"]
+        cap = equipment_data[equip_id]
+
+        # Chilled shipments require chilled-capable equipment
+        if (
+            shipment_data[i]["temperature"] == "chilled"
+            and cap["chilled_capable"] == 0
+        ):
+
+            for t in T:
+                model.addConstr(
+                    x[i, k, t] == 0,
+                    name=f"temperature_{i}_{k}_{t}"
+                )
+
+# ============================================================
+# 10. SOLVE
+# ============================================================
+
+model.optimize()
+
+# ============================================================
+# 11. DISPLAY RESULTS
+# ============================================================
+
+if model.Status == GRB.OPTIMAL:
+
+    print("\nOptimal objective:", model.ObjVal)
+
+    print("\nTruck assignments:")
+
+    for k in K:
+        for t in T:
+
+            if y[k, t].X > 0.5:
+
+                assigned = [
+                    i for i in I
+                    if x[i, k, t].X > 0.5
+                ]
+
+                print(
+                    f"Tractor-driver {k}, Day {t}: "
+                    f"{assigned}"
+                )
+
+    print("\nShipments sent by LTL:")
+
+    for i in I:
+        if z[i].X > 0.5:
+            print(i)
+
+else:
+    print("No optimal solution found.")
+    print("Gurobi status:", model.Status)
