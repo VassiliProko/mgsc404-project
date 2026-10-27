@@ -1,0 +1,572 @@
+"""
+MGSC 404 Project 1 — Simplified instance
+Candidate-tour generation + Gurobi set-partitioning MILP.
+
+What this script enforces for the simplified workbook:
+- Each shipment is served exactly once, by one TL tour or LTL.
+- Each candidate TL tour is checked for weight, floor length, and pallet capacity
+  after every pickup/delivery event.
+- Pickup/delivery precedence, shipment windows, facility hours, depot hours,
+  driver shift, total driving, duty, max service events, compatibility, equipment,
+  same-day completion, and return to home depot.
+- At most one selected tour per tractor-driver pair per day.
+- Actual TL tour cost (all miles, minimum linehaul, extra-stop charges) and
+  published LTL cost.
+- The simplified instance has side access (no LIFO restriction) and does not
+  require a break under its 8-hour total-driving cap.
+
+Important:
+- This is a candidate-tour formulation. Only routes generated and validated
+  below are available to Gurobi. Therefore, a zero MIP gap proves optimality
+  only over the generated candidate tours, not necessarily over every feasible
+  route in the original problem.
+- Candidate tours are limited to at most 3 shipments, as required by max_stops=6.
+"""
+
+from itertools import combinations, permutations
+import math
+import pandas as pd
+import gurobipy as gp
+from gurobipy import GRB
+
+# ============================================================
+# 1. LOAD DATA
+# ============================================================
+
+FILE = "/Users/dumani/Desktop/Mcgill 2026-2027/MGSC404/project1_simplified.xlsx"
+
+shipments_df = pd.read_excel(FILE, sheet_name="shipments")
+facilities_df = pd.read_excel(FILE, sheet_name="facilities")
+distances_df = pd.read_excel(FILE, sheet_name="distance_matrix")
+ltl_rates_df = pd.read_excel(FILE, sheet_name="ltl_rates")
+tl_costs_df = pd.read_excel(FILE, sheet_name="tl_costs")
+equipment_df = pd.read_excel(FILE, sheet_name="equipment")
+tractors_df = pd.read_excel(FILE, sheet_name="tractors")
+depots_df = pd.read_excel(FILE, sheet_name="depots")
+driver_rules_df = pd.read_excel(FILE, sheet_name="driver_rules")
+parameters_df = pd.read_excel(FILE, sheet_name="parameters")
+
+S = shipments_df.set_index("shipment_id").to_dict("index")
+F = facilities_df.set_index("facility_id").to_dict("index")
+DEP = depots_df.set_index("depot_id").to_dict("index")
+E = equipment_df.set_index("equipment_id").to_dict("index")
+TR = tractors_df.set_index("tractor_id").to_dict("index")
+TC = tl_costs_df.set_index("equipment_id").to_dict("index")
+
+I = shipments_df["shipment_id"].tolist()
+K = tractors_df["tractor_id"].tolist()
+DAYS = sorted(int(d) for d in shipments_df["day"].unique())
+
+RULES = driver_rules_df.set_index("parameter")["value"].to_dict()
+PARAMS = parameters_df.set_index("parameter")["value"].to_dict()
+
+MAX_DRIVE = float(RULES["max_drive_hours"])
+MAX_DUTY = float(RULES["max_duty_hours"])
+MAX_EVENTS = int(PARAMS["max_stops"])
+TIME_STEP = float(PARAMS["time_step_hours"])
+LIFO_REQUIRED = int(PARAMS["lifo_required"])
+
+# This script is specifically for the simplified instance.
+if LIFO_REQUIRED != 0:
+    raise ValueError("This script is for the simplified instance (lifo_required=0).")
+
+# ============================================================
+# 2. DISTANCE / DRIVE-TIME LOOKUPS AND INPUT VALIDATION
+# ============================================================
+
+DIST = {}
+DRIVE = {}
+for _, row in distances_df.iterrows():
+    a, b = row["from_id"], row["to_id"]
+    DIST[a, b] = float(row["distance_miles"])
+    DRIVE[a, b] = float(row["drive_hours"])
+
+def lane(a, b):
+    """Return directed-lane miles and stored driving hours."""
+    if a == b:
+        return 0.0, 0.0
+    if (a, b) not in DIST:
+        raise KeyError(f"Missing directed lane in distance_matrix: {a} -> {b}")
+    return DIST[a, b], DRIVE[a, b]
+
+# Basic checks: unique IDs, references, and one LTL rate per shipment.
+if shipments_df["shipment_id"].duplicated().any():
+    raise ValueError("Duplicate shipment_id values found.")
+if tractors_df["tractor_id"].duplicated().any():
+    raise ValueError("Duplicate tractor_id values found.")
+
+facility_ids = set(facilities_df["facility_id"])
+depot_ids = set(depots_df["depot_id"])
+equipment_ids = set(equipment_df["equipment_id"])
+
+for i in I:
+    s = S[i]
+    if s["origin_id"] not in facility_ids or s["destination_id"] not in facility_ids:
+        raise ValueError(f"Invalid facility reference for shipment {i}.")
+    if int(s["day"]) not in DAYS:
+        raise ValueError(f"Invalid day for shipment {i}.")
+
+for k in K:
+    tr = TR[k]
+    if tr["home_depot_id"] not in depot_ids:
+        raise ValueError(f"Invalid home depot for tractor {k}.")
+    if tr["equipment_id"] not in equipment_ids:
+        raise ValueError(f"Invalid equipment for tractor {k}.")
+
+# ============================================================
+# 3. LTL COST
+# ============================================================
+
+def get_ltl_cost(i):
+    s = S[i]
+    miles, _ = lane(s["origin_id"], s["destination_id"])
+
+    matches = ltl_rates_df[
+        (ltl_rates_df["freight_class"] == s["freight_class"])
+        & (ltl_rates_df["weight_from_lb"] <= s["weight_lb"])
+        & (s["weight_lb"] < ltl_rates_df["weight_to_lb"])
+        & (ltl_rates_df["distance_from_miles"] <= miles)
+        & (miles < ltl_rates_df["distance_to_miles"])
+    ]
+
+    if len(matches) != 1:
+        raise ValueError(
+            f"Shipment {i} must match exactly one LTL rate; found {len(matches)}."
+        )
+
+    rate = matches.iloc[0]
+    return float(rate["base_cost_cad"]) * (1.0 + float(rate["fuel_surcharge_pct"]))
+
+LTL_COST = {i: get_ltl_cost(i) for i in I}
+ALL_LTL_COST = sum(LTL_COST.values())
+
+# ============================================================
+# 4. ROUTE FEASIBILITY / SCHEDULING
+# ============================================================
+
+def ceil_to_step(value, step=TIME_STEP):
+    """Round upward to the nearest allowed time step."""
+    return math.ceil((value - 1e-9) / step) * step
+
+def candidate_departures(event_order, tractor_id, day):
+    """
+    Departure candidates include the earliest legal departure and times aligned
+    with each event's opening time after accounting for no-wait travel/handling.
+    This helps avoid excessive waiting counting against duty time.
+    """
+    tr = TR[tractor_id]
+    home = tr["home_depot_id"]
+
+    shift_start = day * 24 + float(tr["shift_start_hour"])
+    shift_end = day * 24 + float(tr["shift_end_hour"])
+    depot_open = day * 24 + float(DEP[home]["open_hour"])
+    depot_close = day * 24 + float(DEP[home]["close_hour"])
+
+    earliest = max(shift_start, depot_open)
+    latest = min(shift_end, depot_close)
+
+    if earliest >= latest:
+        return []
+
+    candidates = {ceil_to_step(earliest)}
+    current = home
+    elapsed_no_wait = 0.0
+
+    for event_type, i in event_order:
+        s = S[i]
+        location = s["origin_id"] if event_type == "P" else s["destination_id"]
+        _, drive_hours = lane(current, location)
+        elapsed_no_wait += drive_hours
+
+        facility = F[location]
+        if event_type == "P":
+            window_open = float(s["pickup_open_hour"])
+            service = float(s["pickup_service_hours"])
+        else:
+            window_open = float(s["delivery_open_hour"])
+            service = float(s["delivery_service_hours"])
+
+        target_open = day * 24 + max(float(facility["open_hour"]), window_open)
+        proposed = ceil_to_step(target_open - elapsed_no_wait)
+
+        if earliest - 1e-9 <= proposed < latest - 1e-9:
+            candidates.add(proposed)
+
+        elapsed_no_wait += service
+        current = location
+
+    # Earlier candidates first. Every departure is on the time-step grid.
+    return sorted(t for t in candidates if earliest - 1e-9 <= t < latest - 1e-9)
+
+def check_route(shipment_group, tractor_id, day, event_order, departure):
+    """
+    Validate one fixed event sequence at a particular departure time.
+    event_order example: [('P','S001'), ('P','S002'), ('D','S002'), ('D','S001')].
+    Returns a route dictionary if feasible; otherwise None.
+    """
+    tr = TR[tractor_id]
+    equipment_id = tr["equipment_id"]
+    cap = E[equipment_id]
+    home = tr["home_depot_id"]
+
+    if any(int(S[i]["day"]) != int(day) for i in shipment_group):
+        return None
+    if len(event_order) > MAX_EVENTS:
+        return None
+
+    # The simplified workbook uses compatible ambient freight. Retain these
+    # checks so the route generator is robust to the workbook's actual fields.
+    temperatures = {str(S[i]["temperature"]).strip().lower() for i in shipment_group}
+    groups = {str(S[i]["compatibility_group"]).strip().lower() for i in shipment_group}
+    if len(temperatures) > 1 or len(groups) > 1:
+        return None
+    if "chilled" in temperatures and int(cap["chilled_capable"]) != 1:
+        return None
+
+    shift_start = day * 24 + float(tr["shift_start_hour"])
+    shift_end = day * 24 + float(tr["shift_end_hour"])
+    depot_open = day * 24 + float(DEP[home]["open_hour"])
+    depot_close = day * 24 + float(DEP[home]["close_hour"])
+
+    if departure < max(shift_start, depot_open) - 1e-9:
+        return None
+    if departure >= min(shift_end, depot_close) - 1e-9:
+        return None
+
+    now = float(departure)
+    current = home
+    total_drive = 0.0
+    total_miles = 0.0
+
+    onboard_weight = 0.0
+    onboard_feet = 0.0
+    onboard_pallets = 0.0
+    picked = set()
+    delivered = set()
+    event_times = []
+
+    for event_type, i in event_order:
+        s = S[i]
+
+        if event_type == "P":
+            if i in picked or i in delivered:
+                return None
+            location = s["origin_id"]
+            service = float(s["pickup_service_hours"])
+        elif event_type == "D":
+            if i not in picked or i in delivered:
+                return None
+            location = s["destination_id"]
+            service = float(s["delivery_service_hours"])
+        else:
+            raise ValueError(f"Unknown event type {event_type}")
+
+        leg_miles, leg_drive = lane(current, location)
+        total_miles += leg_miles
+        total_drive += leg_drive
+        now += leg_drive
+
+        if total_drive > MAX_DRIVE + 1e-9:
+            return None
+
+        facility = F[location]
+        facility_open = day * 24 + float(facility["open_hour"])
+        facility_close = day * 24 + float(facility["close_hour"])
+
+        if event_type == "P":
+            window_open = day * 24 + float(s["pickup_open_hour"])
+            window_close = day * 24 + float(s["pickup_close_hour"])
+        else:
+            window_open = day * 24 + float(s["delivery_open_hour"])
+            window_close = day * 24 + float(s["delivery_close_hour"])
+
+        service_start = max(now, facility_open, window_open)
+        service_end = service_start + service
+
+        # Service must finish by both the shipment-window and facility close.
+        if service_end > min(facility_close, window_close) + 1e-9:
+            return None
+
+        # Waiting and handling both count as duty through the elapsed clock.
+        now = service_end
+        event_times.append({
+            "event": event_type,
+            "shipment": i,
+            "location": location,
+            "start": service_start,
+            "end": service_end,
+        })
+
+        if event_type == "P":
+            picked.add(i)
+            onboard_weight += float(s["weight_lb"])
+            onboard_feet += float(s["linear_feet"])
+            onboard_pallets += float(s["pallets"])
+        else:
+            delivered.add(i)
+            onboard_weight -= float(s["weight_lb"])
+            onboard_feet -= float(s["linear_feet"])
+            onboard_pallets -= float(s["pallets"])
+
+        # All three capacities checked after every event.
+        if onboard_weight > float(cap["weight_capacity_lb"]) + 1e-9:
+            return None
+        if onboard_feet > float(cap["length_capacity_feet"]) + 1e-9:
+            return None
+        if onboard_pallets > float(cap["pallet_capacity"]) + 1e-9:
+            return None
+        if min(onboard_weight, onboard_feet, onboard_pallets) < -1e-9:
+            return None
+
+        current = location
+
+    if delivered != set(shipment_group):
+        return None
+    if abs(onboard_weight) > 1e-9 or abs(onboard_feet) > 1e-9 or abs(onboard_pallets) > 1e-9:
+        return None
+
+    # Return to the designated home depot.
+    return_miles, return_drive = lane(current, home)
+    total_miles += return_miles
+    total_drive += return_drive
+    now += return_drive
+
+    if total_drive > MAX_DRIVE + 1e-9:
+        return None
+    if now > shift_end + 1e-9:
+        return None
+    if now > depot_close + 1e-9:
+        return None
+
+    duty = now - departure
+    if duty > MAX_DUTY + 1e-9:
+        return None
+
+    costs = TC[equipment_id]
+    linehaul = max(
+        float(costs["minimum_linehaul_cad"]),
+        total_miles * float(costs["linehaul_cad_per_mile"])
+    )
+    extra_events = max(0, len(event_order) - 2)
+    stop_charge = extra_events * float(costs["extra_stop_cad"])
+    total_cost = linehaul + stop_charge
+
+    return {
+        "shipments": tuple(sorted(shipment_group)),
+        "tractor": tractor_id,
+        "day": int(day),
+        "events": tuple(event_order),
+        "event_times": event_times,
+        "miles": total_miles,
+        "drive_hours": total_drive,
+        "duty_hours": duty,
+        "departure": departure,
+        "return_time": now,
+        "cost": total_cost,
+        "weight_capacity": float(cap["weight_capacity_lb"]),
+        "length_capacity": float(cap["length_capacity_feet"]),
+        "pallet_capacity": float(cap["pallet_capacity"]),
+    }
+
+def valid_precedence(order, group):
+    """Every shipment's pickup must appear before its delivery."""
+    positions = {event: pos for pos, event in enumerate(order)}
+    return all(positions[("P", i)] < positions[("D", i)] for i in group)
+
+# ============================================================
+# 5. GENERATE FEASIBLE CANDIDATE TOURS
+# ============================================================
+
+routes = []
+route_id = 0
+route_keys = set()
+
+for day in DAYS:
+    shipments_today = [i for i in I if int(S[i]["day"]) == int(day)]
+    max_group_size = min(MAX_EVENTS // 2, len(shipments_today))
+
+    for size in range(1, max_group_size + 1):
+        for group in combinations(shipments_today, size):
+
+            # Cheap pre-filter for compatibility and aggregate capacities
+            temperatures = {str(S[i]["temperature"]).strip().lower() for i in group}
+            groups = {str(S[i]["compatibility_group"]).strip().lower() for i in group}
+            if len(temperatures) > 1 or len(groups) > 1:
+                continue
+
+            events = [(event, i) for i in group for event in ("P", "D")]
+
+            for order in permutations(events):
+                if not valid_precedence(order, group):
+                    continue
+
+                for k in K:
+                    # If the earliest legal departure is feasible, one feasible
+                    # schedule is enough because departure time does not change cost.
+                    departures = candidate_departures(order, k, day)
+                    for departure in departures:
+                        result = check_route(group, k, day, order, departure)
+                        if result is not None:
+                            # Keep only one feasible schedule for each exact
+                            # shipment group / tractor / day / event order.
+                            key = (
+                                tuple(sorted(group)), k, int(day), tuple(order)
+                            )
+                            if key not in route_keys:
+                                result["route_id"] = route_id
+                                routes.append(result)
+                                route_keys.add(key)
+                                route_id += 1
+                            break
+
+print(f"Feasible candidate tours generated: {len(routes):,}")
+
+if not routes:
+    raise RuntimeError("No feasible TL candidate tours were generated.")
+
+# ============================================================
+# 6. GUROBI SET-PARTITIONING MODEL
+# ============================================================
+
+model = gp.Model("MGSC404_Project1_Simplified")
+R = range(len(routes))
+
+use_route = model.addVars(R, vtype=GRB.BINARY, name="use_route")
+use_ltl = model.addVars(I, vtype=GRB.BINARY, name="use_ltl")
+
+model.setObjective(
+    gp.quicksum(routes[r]["cost"] * use_route[r] for r in R)
+    + gp.quicksum(LTL_COST[i] * use_ltl[i] for i in I),
+    GRB.MINIMIZE
+)
+
+# Every shipment is served exactly once: one selected TL route or LTL.
+for i in I:
+    model.addConstr(
+        gp.quicksum(
+            use_route[r] for r in R if i in routes[r]["shipments"]
+        ) + use_ltl[i] == 1,
+        name=f"shipment_served_once_{i}"
+    )
+
+# At most one tour per tractor-driver pair per day.
+for k in K:
+    for day in DAYS:
+        model.addConstr(
+            gp.quicksum(
+                use_route[r]
+                for r in R
+                if routes[r]["tractor"] == k and routes[r]["day"] == day
+            ) <= 1,
+            name=f"one_tour_per_tractor_day_{k}_{day}"
+        )
+
+# Solver settings (adjust if needed).
+model.Params.OutputFlag = 1
+model.Params.MIPGap = 0.01  # 1% relative gap target; set to 0 for exact proof on candidate pool
+model.optimize()
+
+# ============================================================
+# 7. REPORT RESULTS
+# ============================================================
+
+if model.SolCount == 0:
+    print(f"No feasible solution found. Gurobi status: {model.Status}")
+    raise RuntimeError("Gurobi did not find a feasible solution.")
+
+print("\n================ OPTIMIZATION RESULTS ================")
+print("Gurobi status:", model.Status)
+print("Objective (CAD):", round(model.ObjVal, 2))
+print("All-LTL baseline (CAD):", round(ALL_LTL_COST, 2))
+
+savings = ALL_LTL_COST - model.ObjVal
+savings_pct = 100.0 * savings / ALL_LTL_COST if ALL_LTL_COST else 0.0
+print("Savings (CAD):", round(savings, 2))
+print("Savings (%):", round(savings_pct, 2))
+if model.IsMIP:
+    print("MIP gap (%):", round(100.0 * model.MIPGap, 4))
+
+selected_routes = []
+for r in R:
+    if use_route[r].X > 0.5:
+        selected_routes.append(routes[r])
+
+print("\nSelected TL tours:")
+for route in selected_routes:
+    print("\n------------------------------------------------------")
+    print("Route ID:", route["route_id"])
+    print("Tractor:", route["tractor"], "| Day:", route["day"])
+    print("Shipments:", route["shipments"])
+    print("Event order:", route["events"])
+    print("Departure (absolute hour):", round(route["departure"], 2))
+    print("Return (absolute hour):", round(route["return_time"], 2))
+    print("Miles (including depot legs):", round(route["miles"], 2))
+    print("Driving hours:", round(route["drive_hours"], 2))
+    print("Duty hours:", round(route["duty_hours"], 2))
+    print("Route cost (CAD):", round(route["cost"], 2))
+    print("Event schedule:")
+    for event in route["event_times"]:
+        print(
+            f"  {event['event']} {event['shipment']} at {event['location']}: "
+            f"{event['start']:.2f}–{event['end']:.2f}"
+        )
+
+ltl_shipments = [i for i in I if use_ltl[i].X > 0.5]
+tl_shipments = set(i for route in selected_routes for i in route["shipments"])
+dedicated_count = sum(len(route["shipments"]) == 1 for route in selected_routes)
+consolidated_count = sum(len(route["shipments"]) >= 2 for route in selected_routes)
+
+print("\nShipments sent by LTL:", len(ltl_shipments))
+print(ltl_shipments)
+print("Shipments served by TL:", len(tl_shipments))
+print("Dedicated TL tours:", dedicated_count)
+print("Consolidated TL tours:", consolidated_count)
+
+# Separate weight and floor-length utilization for selected TL tours.
+if selected_routes:
+    total_weight = 0.0
+    total_weight_capacity = 0.0
+    total_feet = 0.0
+    total_feet_capacity = 0.0
+    total_pallets = 0.0
+    total_pallet_capacity = 0.0
+
+    for route in selected_routes:
+        group = route["shipments"]
+        total_weight += sum(float(S[i]["weight_lb"]) for i in group)
+        total_weight_capacity += route["weight_capacity"]
+        total_feet += sum(float(S[i]["linear_feet"]) for i in group)
+        total_feet_capacity += route["length_capacity"]
+        total_pallets += sum(float(S[i]["pallets"]) for i in group)
+        total_pallet_capacity += route["pallet_capacity"]
+
+    print("Aggregate weight utilization (%):",
+          round(100 * total_weight / total_weight_capacity, 2))
+    print("Aggregate floor-length utilization (%):",
+          round(100 * total_feet / total_feet_capacity, 2))
+    print("Aggregate pallet utilization (%):",
+          round(100 * total_pallets / total_pallet_capacity, 2))
+
+print("Total TL miles:", round(sum(r["miles"] for r in selected_routes), 2))
+
+# Export selected routes and LTL decisions for an independent checker.
+route_rows = []
+for route in selected_routes:
+    route_rows.append({
+        "route_id": route["route_id"],
+        "tractor_id": route["tractor"],
+        "day": route["day"],
+        "shipments": ", ".join(route["shipments"]),
+        "event_order": " | ".join(f"{a}:{i}" for a, i in route["events"]),
+        "departure_absolute_hour": route["departure"],
+        "return_absolute_hour": route["return_time"],
+        "miles": route["miles"],
+        "drive_hours": route["drive_hours"],
+        "duty_hours": route["duty_hours"],
+        "route_cost_cad": route["cost"],
+    })
+
+pd.DataFrame(route_rows).to_csv("selected_tl_routes.csv", index=False)
+pd.DataFrame({"shipment_id": ltl_shipments}).to_csv("selected_ltl_shipments.csv", index=False)
+
+print("\nWrote selected_tl_routes.csv and selected_ltl_shipments.csv.")
