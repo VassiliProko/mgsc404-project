@@ -1,0 +1,1425 @@
+{\rtf1\ansi\ansicpg1252\cocoartf2869
+\cocoatextscaling0\cocoaplatform0{\fonttbl\f0\fswiss\fcharset0 Arial-BoldMT;\f1\froman\fcharset0 Times-Bold;\f2\fswiss\fcharset0 ArialMT;
+\f3\froman\fcharset0 Times-Roman;\f4\fmodern\fcharset0 Courier-Bold;}
+{\colortbl;\red255\green255\blue255;\red0\green0\blue0;\red109\green109\blue109;\red24\green112\blue43;
+}
+{\*\expandedcolortbl;;\cssrgb\c0\c0\c0;\cssrgb\c50196\c50196\c50196;\cssrgb\c9412\c50196\c21961;
+}
+{\*\listtable{\list\listtemplateid1\listhybrid{\listlevel\levelnfc23\levelnfcn23\leveljc0\leveljcn0\levelfollow0\levelstartat0\levelspace360\levelindent0{\*\levelmarker \{disc\}}{\leveltext\leveltemplateid1\'01\uc0\u8226 ;}{\levelnumbers;}\fi-360\li720\lin720 }{\listname ;}\listid1}
+{\list\listtemplateid2\listhybrid{\listlevel\levelnfc23\levelnfcn23\leveljc0\leveljcn0\levelfollow0\levelstartat0\levelspace360\levelindent0{\*\levelmarker \{disc\}}{\leveltext\leveltemplateid101\'01\uc0\u8226 ;}{\levelnumbers;}\fi-360\li720\lin720 }{\listname ;}\listid2}
+{\list\listtemplateid3\listhybrid{\listlevel\levelnfc23\levelnfcn23\leveljc0\leveljcn0\levelfollow0\levelstartat0\levelspace360\levelindent0{\*\levelmarker \{disc\}}{\leveltext\leveltemplateid201\'01\uc0\u8226 ;}{\levelnumbers;}\fi-360\li720\lin720 }{\listname ;}\listid3}
+{\list\listtemplateid4\listhybrid{\listlevel\levelnfc23\levelnfcn23\leveljc0\leveljcn0\levelfollow0\levelstartat0\levelspace360\levelindent0{\*\levelmarker \{disc\}}{\leveltext\leveltemplateid301\'01\uc0\u8226 ;}{\levelnumbers;}\fi-360\li720\lin720 }{\listname ;}\listid4}
+{\list\listtemplateid5\listhybrid{\listlevel\levelnfc23\levelnfcn23\leveljc0\leveljcn0\levelfollow0\levelstartat0\levelspace360\levelindent0{\*\levelmarker \{disc\}}{\leveltext\leveltemplateid401\'01\uc0\u8226 ;}{\levelnumbers;}\fi-360\li720\lin720 }{\listname ;}\listid5}
+{\list\listtemplateid6\listhybrid{\listlevel\levelnfc23\levelnfcn23\leveljc0\leveljcn0\levelfollow0\levelstartat0\levelspace360\levelindent0{\*\levelmarker \{disc\}}{\leveltext\leveltemplateid501\'01\uc0\u8226 ;}{\levelnumbers;}\fi-360\li720\lin720 }{\listname ;}\listid6}
+{\list\listtemplateid7\listhybrid{\listlevel\levelnfc23\levelnfcn23\leveljc0\leveljcn0\levelfollow0\levelstartat0\levelspace360\levelindent0{\*\levelmarker \{disc\}}{\leveltext\leveltemplateid601\'01\uc0\u8226 ;}{\levelnumbers;}\fi-360\li720\lin720 }{\listname ;}\listid7}
+{\list\listtemplateid8\listhybrid{\listlevel\levelnfc23\levelnfcn23\leveljc0\leveljcn0\levelfollow0\levelstartat0\levelspace360\levelindent0{\*\levelmarker \{disc\}}{\leveltext\leveltemplateid701\'01\uc0\u8226 ;}{\levelnumbers;}\fi-360\li720\lin720 }{\listname ;}\listid8}}
+{\*\listoverridetable{\listoverride\listid1\listoverridecount0\ls1}{\listoverride\listid2\listoverridecount0\ls2}{\listoverride\listid3\listoverridecount0\ls3}{\listoverride\listid4\listoverridecount0\ls4}{\listoverride\listid5\listoverridecount0\ls5}{\listoverride\listid6\listoverridecount0\ls6}{\listoverride\listid7\listoverridecount0\ls7}{\listoverride\listid8\listoverridecount0\ls8}}
+\margl1440\margr1440\vieww11520\viewh8400\viewkind0
+\deftab720
+\pard\pardeftab720\sa106\partightenfactor0
+
+\f0\b\fs45\fsmilli22667 \cf0 \expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec2 1. Decision variables
+\f1\fs36 \
+\pard\pardeftab720\sa106\partightenfactor0
+
+\f0\fs34\fsmilli17333 \cf0 Shipment assignment
+\f1\fs28 \
+\pard\pardeftab720\partightenfactor0
+
+\f2\b0\fs29\fsmilli14667 \cf0 \\[ x_\{ik\}= \\begin\{cases\} 1 & \\text\{if shipment \}i\\text\{ is assigned to TL tour \}k\\\\ 0 & \\text\{otherwise\} \\end\{cases\} \\]\\[ z_i= \\begin\{cases\} 1 & \\text\{if shipment \}i\\text\{ is shipped by LTL\}\\\\ 0 & \\text\{otherwise\} \\end\{cases\} \\]
+\f3\fs24 \
+\pard\pardeftab720\sa106\partightenfactor0
+
+\f0\b\fs34\fsmilli17333 \cf0 Tour selection
+\f1\fs28 \
+\pard\pardeftab720\partightenfactor0
+
+\f2\b0\fs29\fsmilli14667 \cf0 \\[ y_k= \\begin\{cases\} 1 & \\text\{if TL tour \}k\\text\{ is selected\}\\\\ 0 & \\text\{otherwise\} \\end\{cases\} \\]
+\f3\fs24 \
+\pard\pardeftab720\partightenfactor0
+\cf3 \strokec3 \
+\pard\pardeftab720\sa240\partightenfactor0
+\cf0 \strokec2 \
+\pard\pardeftab720\sa160\partightenfactor0
+
+\f0\b\fs61\fsmilli30667 \cf0 2. Objective \'97 MINIMIZE total cost
+\f1\fs48 \
+\pard\pardeftab720\partightenfactor0
+
+\f2\b0\fs29\fsmilli14667 \cf0 \\[ \\boxed\{ \\min Z= \\sum_\{k\\in K\} C_k^\{TL\}y_k + \\sum_\{i\\in I\} C_i^\{LTL\}z_i \} \\]
+\f3\fs24 \
+\pard\pardeftab720\sa320\partightenfactor0
+
+\f2\fs29\fsmilli14667 \cf0 where:
+\f3\fs24 \
+\pard\pardeftab720\partightenfactor0
+\cf0 \
+\pard\pardeftab720\qc\partightenfactor0
+
+\f2\fs29\fsmilli14667 \cf0 CkTL=Ce(k), re(k)Dk+ce(k)stop(0,Nk-2)
+\f3\fs24 \
+\pard\pardeftab720\sa320\partightenfactor0
+
+\f2\fs29\fsmilli14667 \cf0 and
+\f3\fs24 \
+\pard\pardeftab720\partightenfactor0
+\cf0 \
+\pard\pardeftab720\qc\partightenfactor0
+
+\f2\fs29\fsmilli14667 \cf0 CiLTL=baseLTLratei1+fuelsurchargei
+\f3\fs24 \
+\pard\pardeftab720\sa320\partightenfactor0
+
+\f2\fs29\fsmilli14667 \cf0 This follows the project cost definition: TL cost includes the linehaul for 
+\f0\b all miles, including depot departure and return
+\f2\b0 , plus extra-stop charges, while LTL is calculated separately. Readme_project1
+\f3\fs24 \
+\pard\pardeftab720\sa106\partightenfactor0
+
+\f0\b\fs34\fsmilli17333 \cf0 Important:
+\f1\fs28 \
+\pard\pardeftab720\sa320\partightenfactor0
+
+\f2\b0\fs29\fsmilli14667 \cf0 There is 
+\f0\b no maximization objective
+\f2\b0  in Project 1.
+\f3\fs24 \
+
+\f2\fs29\fsmilli14667 The model is:
+\f3\fs24 \
+\pard\pardeftab720\partightenfactor0
+
+\f2\fs29\fsmilli14667 \cf0 \\[ \\boxed\{\\text\{MINIMIZE transportation cost\}\} \\]
+\f3\fs24 \
+\pard\pardeftab720\partightenfactor0
+\cf3 \strokec3 \
+\pard\pardeftab720\sa240\partightenfactor0
+\cf0 \strokec2 \
+\pard\pardeftab720\sa160\partightenfactor0
+
+\f0\b\fs61\fsmilli30667 \cf0 3. Every shipment served exactly once
+\f1\fs48 \
+\pard\pardeftab720\sa320\partightenfactor0
+
+\f2\b0\fs29\fsmilli14667 \cf0 For every shipment i:
+\f3\fs24 \
+\pard\pardeftab720\partightenfactor0
+
+\f2\fs29\fsmilli14667 \cf0 \\[ \\boxed\{ \\sum_\{k\\in K\}x_\{ik\}+z_i=1 \} \\]
+\f3\fs24 \
+\pard\pardeftab720\sa320\partightenfactor0
+
+\f2\fs29\fsmilli14667 \cf0 Meaning:
+\f3\fs24 \
+\pard\tx220\tx720\pardeftab720\li720\fi-720\partightenfactor0
+\ls1\ilvl0
+\f2\fs29\fsmilli14667 \cf0 \kerning1\expnd0\expndtw0 \outl0\strokewidth0 {\listtext	\uc0\u8226 	}\expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec2 assigned to exactly one TL tour, 
+\f0\b or
+\f2\b0 \
+\pard\tx220\tx720\pardeftab720\li720\fi-720\sa320\partightenfactor0
+\ls1\ilvl0\cf0 \kerning1\expnd0\expndtw0 \outl0\strokewidth0 {\listtext	\uc0\u8226 	}\expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec2 sent by LTL.\
+\pard\pardeftab720\sa320\partightenfactor0
+\cf0 It cannot be both and cannot be left unserved.
+\f3\fs24 \
+\pard\pardeftab720\partightenfactor0
+\cf0 \
+\pard\pardeftab720\partightenfactor0
+\cf3 \strokec3 \
+\pard\pardeftab720\sa240\partightenfactor0
+\cf0 \strokec2 \
+\pard\pardeftab720\sa160\partightenfactor0
+
+\f0\b\fs61\fsmilli30667 \cf0 4. Tour can only be selected if shipments are assigned
+\f1\fs48 \
+\pard\pardeftab720\sa320\partightenfactor0
+
+\f2\b0\fs29\fsmilli14667 \cf0 For every shipment i and tour k:
+\f3\fs24 \
+\pard\pardeftab720\partightenfactor0
+
+\f2\fs29\fsmilli14667 \cf0 \\[ \\boxed\{ x_\{ik\}\\le y_k \} \\]
+\f3\fs24 \
+\pard\pardeftab720\sa320\partightenfactor0
+
+\f2\fs29\fsmilli14667 \cf0 If a shipment is assigned to tour k, that tour must actually be selected.
+\f3\fs24 \
+\pard\pardeftab720\partightenfactor0
+\cf0 \
+\pard\pardeftab720\partightenfactor0
+\cf3 \strokec3 \
+\pard\pardeftab720\sa240\partightenfactor0
+\cf0 \strokec2 \
+\pard\pardeftab720\sa160\partightenfactor0
+
+\f0\b\fs61\fsmilli30667 \cf0 5. Tour capacity \'97 weight
+\f1\fs48 \
+\pard\pardeftab720\sa320\partightenfactor0
+
+\f2\b0\fs29\fsmilli14667 \cf0 For every selected tour k:
+\f3\fs24 \
+\pard\pardeftab720\partightenfactor0
+
+\f2\fs29\fsmilli14667 \cf0 \\[ \\boxed\{ \\sum_\{i\\in I\} w_i x_\{ik\} \\le W_\{e(k)\} \} \\]
+\f3\fs24 \
+\pard\pardeftab720\sa320\partightenfactor0
+
+\f2\fs29\fsmilli14667 \cf0 where:
+\f3\fs24 \
+\pard\tx220\tx720\pardeftab720\li720\fi-720\partightenfactor0
+\ls2\ilvl0
+\f2\fs29\fsmilli14667 \cf0 \kerning1\expnd0\expndtw0 \outl0\strokewidth0 {\listtext	\uc0\u8226 	}\expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec2 wi = shipment weight\
+\pard\tx220\tx720\pardeftab720\li720\fi-720\sa320\partightenfactor0
+\ls2\ilvl0\cf0 \kerning1\expnd0\expndtw0 \outl0\strokewidth0 {\listtext	\uc0\u8226 	}\expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec2 We(k) = weight capacity of the equipment assigned to tour k\
+\pard\pardeftab720\sa320\partightenfactor0
+\cf0 Simplified DRY:
+\f3\fs24 \
+\pard\pardeftab720\partightenfactor0
+\cf0 \
+\pard\pardeftab720\qc\partightenfactor0
+
+\f2\fs29\fsmilli14667 \cf0 W=45,000lb
+\f3\fs24 \
+\pard\pardeftab720\sa320\partightenfactor0
+
+\f2\fs29\fsmilli14667 \cf0 Main REEFER:
+\f3\fs24 \
+\pard\pardeftab720\partightenfactor0
+\cf0 \
+\pard\pardeftab720\qc\partightenfactor0
+
+\f2\fs29\fsmilli14667 \cf0 W=42,000lb
+\f3\fs24 \
+\pard\pardeftab720\partightenfactor0
+\cf0 \
+\pard\pardeftab720\partightenfactor0
+\cf3 \strokec3 \
+\pard\pardeftab720\sa240\partightenfactor0
+\cf0 \strokec2 \
+\pard\pardeftab720\sa160\partightenfactor0
+
+\f0\b\fs61\fsmilli30667 \cf0 6. Tour capacity \'97 floor length
+\f1\fs48 \
+\pard\pardeftab720\partightenfactor0
+
+\f2\b0\fs29\fsmilli14667 \cf0 \\[ \\boxed\{ \\sum_\{i\\in I\} l_i x_\{ik\} \\le L_\{e(k)\} \} \\]
+\f3\fs24 \
+\pard\pardeftab720\sa320\partightenfactor0
+
+\f2\fs29\fsmilli14667 \cf0 where li is linear feet.
+\f3\fs24 \
+
+\f2\fs29\fsmilli14667 Simplified DRY:
+\f3\fs24 \
+\pard\pardeftab720\partightenfactor0
+\cf0 \
+\pard\pardeftab720\qc\partightenfactor0
+
+\f2\fs29\fsmilli14667 \cf0 L=53ft
+\f3\fs24 \
+\pard\pardeftab720\sa320\partightenfactor0
+
+\f2\fs29\fsmilli14667 \cf0 Main REEFER:
+\f3\fs24 \
+\pard\pardeftab720\partightenfactor0
+\cf0 \
+\pard\pardeftab720\qc\partightenfactor0
+
+\f2\fs29\fsmilli14667 \cf0 L=48ft
+\f3\fs24 \
+\pard\pardeftab720\sa320\partightenfactor0
+
+\f2\fs29\fsmilli14667 \cf0 The project explicitly says the three capacity dimensions must be checked separately. Project 1-Consolidation
+\f3\fs24 \
+\pard\pardeftab720\partightenfactor0
+\cf0 \
+\pard\pardeftab720\partightenfactor0
+\cf3 \strokec3 \
+\pard\pardeftab720\sa240\partightenfactor0
+\cf0 \strokec2 \
+\pard\pardeftab720\sa160\partightenfactor0
+
+\f0\b\fs61\fsmilli30667 \cf0 7. Tour capacity \'97 pallets
+\f1\fs48 \
+\pard\pardeftab720\partightenfactor0
+
+\f2\b0\fs29\fsmilli14667 \cf0 \\[ \\boxed\{ \\sum_\{i\\in I\} p_i x_\{ik\} \\le P_\{e(k)\} \} \\]
+\f3\fs24 \
+\pard\pardeftab720\sa320\partightenfactor0
+
+\f2\fs29\fsmilli14667 \cf0 Simplified DRY:
+\f3\fs24 \
+\pard\pardeftab720\partightenfactor0
+\cf0 \
+\pard\pardeftab720\qc\partightenfactor0
+
+\f2\fs29\fsmilli14667 \cf0 P=26
+\f3\fs24 \
+\pard\pardeftab720\sa320\partightenfactor0
+
+\f2\fs29\fsmilli14667 \cf0 Main REEFER:
+\f3\fs24 \
+\pard\pardeftab720\partightenfactor0
+\cf0 \
+\pard\pardeftab720\qc\partightenfactor0
+
+\f2\fs29\fsmilli14667 \cf0 P=24
+\f3\fs24 \
+\pard\pardeftab720\sa320\partightenfactor0
+
+\f2\fs29\fsmilli14667 \cf0 All three must hold simultaneously:
+\f3\fs24 \
+\pard\pardeftab720\partightenfactor0
+
+\f2\fs29\fsmilli14667 \cf0 \\[ \\boxed\{ \\sum_iw_ix_\{ik\}\\le W \} \\]\\[ \\boxed\{ \\sum_il_ix_\{ik\}\\le L \} \\]\\[ \\boxed\{ \\sum_ip_ix_\{ik\}\\le P \} \\]
+\f3\fs24 \
+\pard\pardeftab720\partightenfactor0
+\cf3 \strokec3 \
+\pard\pardeftab720\sa240\partightenfactor0
+\cf0 \strokec2 \
+\pard\pardeftab720\sa160\partightenfactor0
+
+\f0\b\fs61\fsmilli30667 \cf0 8. Maximum number of stops
+\f1\fs48 \
+\pard\pardeftab720\sa320\partightenfactor0
+
+\f2\b0\fs29\fsmilli14667 \cf0 Each shipment creates:
+\f3\fs24 \
+\pard\tx220\tx720\pardeftab720\li720\fi-720\partightenfactor0
+\ls3\ilvl0
+\f2\fs29\fsmilli14667 \cf0 \kerning1\expnd0\expndtw0 \outl0\strokewidth0 {\listtext	\uc0\u8226 	}\expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec2 1 pickup\
+\pard\tx220\tx720\pardeftab720\li720\fi-720\sa320\partightenfactor0
+\ls3\ilvl0\cf0 \kerning1\expnd0\expndtw0 \outl0\strokewidth0 {\listtext	\uc0\u8226 	}\expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec2 1 delivery\
+\pard\pardeftab720\sa320\partightenfactor0
+\cf0 Therefore:
+\f3\fs24 \
+\pard\pardeftab720\partightenfactor0
+\cf0 \
+\pard\pardeftab720\qc\partightenfactor0
+
+\f2\fs29\fsmilli14667 \cf0 Nk=2ixik
+\f3\fs24 \
+\pard\pardeftab720\sa320\partightenfactor0
+
+\f2\fs29\fsmilli14667 \cf0 and:
+\f3\fs24 \
+\pard\pardeftab720\partightenfactor0
+
+\f2\fs29\fsmilli14667 \cf0 \\[ \\boxed\{ 2\\sum_i x_\{ik\}\\le S^\{max\} \} \\]
+\f3\fs24 \
+\pard\pardeftab720\sa106\partightenfactor0
+
+\f0\b\fs34\fsmilli17333 \cf0 Simplified
+\f1\fs28 \
+\pard\pardeftab720\partightenfactor0
+
+\f3\b0\fs24 \cf0 \
+\pard\pardeftab720\qc\partightenfactor0
+
+\f2\fs29\fsmilli14667 \cf0 Smax=6
+\f3\fs24 \
+\pard\pardeftab720\sa320\partightenfactor0
+
+\f2\fs29\fsmilli14667 \cf0 so:
+\f3\fs24 \
+\pard\pardeftab720\partightenfactor0
+
+\f2\fs29\fsmilli14667 \cf0 \\[ \\boxed\{ \\sum_i x_\{ik\}\\le3 \} \\]
+\f3\fs24 \
+\pard\pardeftab720\sa106\partightenfactor0
+
+\f0\b\fs34\fsmilli17333 \cf0 Main
+\f1\fs28 \
+\pard\pardeftab720\partightenfactor0
+
+\f3\b0\fs24 \cf0 \
+\pard\pardeftab720\qc\partightenfactor0
+
+\f2\fs29\fsmilli14667 \cf0 Smax=8
+\f3\fs24 \
+\pard\pardeftab720\sa320\partightenfactor0
+
+\f2\fs29\fsmilli14667 \cf0 so:
+\f3\fs24 \
+\pard\pardeftab720\partightenfactor0
+
+\f2\fs29\fsmilli14667 \cf0 \\[ \\boxed\{ \\sum_i x_\{ik\}\\le4 \} \\]
+\f3\fs24 \
+\pard\pardeftab720\sa320\partightenfactor0
+
+\f2\fs29\fsmilli14667 \cf0 This is why a consolidated tour has at least 2 shipments, while a dedicated tour has exactly 1 shipment. Project 1-Consolidation
+\f3\fs24 \
+\pard\pardeftab720\partightenfactor0
+\cf0 \
+\pard\pardeftab720\partightenfactor0
+\cf3 \strokec3 \
+\pard\pardeftab720\sa240\partightenfactor0
+\cf0 \strokec2 \
+\pard\pardeftab720\sa160\partightenfactor0
+
+\f0\b\fs61\fsmilli30667 \cf0 9. Pickup before delivery
+\f1\fs48 \
+\pard\pardeftab720\sa320\partightenfactor0
+
+\f2\b0\fs29\fsmilli14667 \cf0 For every shipment i:
+\f3\fs24 \
+\pard\pardeftab720\partightenfactor0
+
+\f2\fs29\fsmilli14667 \cf0 \\[ \\boxed\{ T_i^\{pickup\}<T_i^\{delivery\} \} \\]
+\f3\fs24 \
+\pard\pardeftab720\sa320\partightenfactor0
+
+\f2\fs29\fsmilli14667 \cf0 The shipment cannot be delivered before it has been picked up. This is explicitly required in both versions. Project 1-Consolidation
+\f3\fs24 \
+\pard\pardeftab720\partightenfactor0
+\cf0 \
+\pard\pardeftab720\partightenfactor0
+\cf3 \strokec3 \
+\pard\pardeftab720\sa240\partightenfactor0
+\cf0 \strokec2 \
+\pard\pardeftab720\sa160\partightenfactor0
+
+\f0\b\fs61\fsmilli30667 \cf0 10. Pickup time window
+\f1\fs48 \
+\pard\pardeftab720\sa320\partightenfactor0
+
+\f2\b0\fs29\fsmilli14667 \cf0 For every shipment i:
+\f3\fs24 \
+\pard\pardeftab720\partightenfactor0
+
+\f2\fs29\fsmilli14667 \cf0 \\[ \\boxed\{ P_i^\{open\} \\le T_i^\{pickup\} \} \\]
+\f3\fs24 \
+\pard\pardeftab720\sa320\partightenfactor0
+
+\f2\fs29\fsmilli14667 \cf0 and
+\f3\fs24 \
+\pard\pardeftab720\partightenfactor0
+
+\f2\fs29\fsmilli14667 \cf0 \\[ \\boxed\{ T_i^\{pickup\}+h_i^P \\le P_i^\{close\} \} \\]
+\f3\fs24 \
+\pard\pardeftab720\sa320\partightenfactor0
+
+\f2\fs29\fsmilli14667 \cf0 where:
+\f3\fs24 \
+\pard\tx220\tx720\pardeftab720\li720\fi-720\partightenfactor0
+\ls4\ilvl0
+\f2\fs29\fsmilli14667 \cf0 \kerning1\expnd0\expndtw0 \outl0\strokewidth0 {\listtext	\uc0\u8226 	}\expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec2 Tipickup = pickup start\
+\pard\tx220\tx720\pardeftab720\li720\fi-720\sa320\partightenfactor0
+\ls4\ilvl0\cf0 \kerning1\expnd0\expndtw0 \outl0\strokewidth0 {\listtext	\uc0\u8226 	}\expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec2 hiP = pickup service duration\
+\pard\pardeftab720\sa320\partightenfactor0
+\cf0 The important point is that the 
+\f0\b entire handling duration
+\f2\b0  must fit inside the window, not merely the arrival time. Readme_project1
+\f3\fs24 \
+\pard\pardeftab720\partightenfactor0
+\cf0 \
+\pard\pardeftab720\partightenfactor0
+\cf3 \strokec3 \
+\pard\pardeftab720\sa240\partightenfactor0
+\cf0 \strokec2 \
+\pard\pardeftab720\sa160\partightenfactor0
+
+\f0\b\fs61\fsmilli30667 \cf0 11. Delivery time window
+\f1\fs48 \
+\pard\pardeftab720\sa320\partightenfactor0
+
+\f2\b0\fs29\fsmilli14667 \cf0 Similarly:
+\f3\fs24 \
+\pard\pardeftab720\partightenfactor0
+
+\f2\fs29\fsmilli14667 \cf0 \\[ \\boxed\{ D_i^\{open\} \\le T_i^\{delivery\} \} \\]
+\f3\fs24 \
+\pard\pardeftab720\sa320\partightenfactor0
+
+\f2\fs29\fsmilli14667 \cf0 and
+\f3\fs24 \
+\pard\pardeftab720\partightenfactor0
+
+\f2\fs29\fsmilli14667 \cf0 \\[ \\boxed\{ T_i^\{delivery\}+h_i^D \\le D_i^\{close\} \} \\]
+\f3\fs24 \
+\pard\pardeftab720\sa320\partightenfactor0
+
+\f2\fs29\fsmilli14667 \cf0 Again, the full service must finish before the closing time.
+\f3\fs24 \
+\pard\pardeftab720\partightenfactor0
+\cf0 \
+\pard\pardeftab720\partightenfactor0
+\cf3 \strokec3 \
+\pard\pardeftab720\sa240\partightenfactor0
+\cf0 \strokec2 \
+\pard\pardeftab720\sa160\partightenfactor0
+
+\f0\b\fs61\fsmilli30667 \cf0 12. Facility operating hours
+\f1\fs48 \
+\pard\pardeftab720\sa320\partightenfactor0
+
+\f2\b0\fs29\fsmilli14667 \cf0 Pickup:
+\f3\fs24 \
+\pard\pardeftab720\partightenfactor0
+
+\f2\fs29\fsmilli14667 \cf0 \\[ \\boxed\{ F_o^\{open\} \\le T_i^\{pickup\} \} \\]\\[ \\boxed\{ T_i^\{pickup\}+h_i^P \\le F_o^\{close\} \} \\]
+\f3\fs24 \
+\pard\pardeftab720\sa320\partightenfactor0
+
+\f2\fs29\fsmilli14667 \cf0 Delivery:
+\f3\fs24 \
+\pard\pardeftab720\partightenfactor0
+
+\f2\fs29\fsmilli14667 \cf0 \\[ \\boxed\{ F_d^\{open\} \\le T_i^\{delivery\} \} \\]\\[ \\boxed\{ T_i^\{delivery\}+h_i^D \\le F_d^\{close\} \} \\]
+\f3\fs24 \
+\pard\pardeftab720\sa320\partightenfactor0
+
+\f2\fs29\fsmilli14667 \cf0 The effective service window is therefore the intersection of:
+\f3\fs24 \
+\pard\pardeftab720\partightenfactor0
+\cf0 \
+\pard\pardeftab720\qc\partightenfactor0
+
+\f2\fs29\fsmilli14667 \cf0 shipmentwindowfacilityhours
+\f3\fs24 \
+\pard\pardeftab720\sa320\partightenfactor0
+
+\f2\fs29\fsmilli14667 \cf0 The README explicitly states that both must be satisfied. Readme_project1
+\f3\fs24 \
+\pard\pardeftab720\partightenfactor0
+\cf0 \
+\pard\pardeftab720\partightenfactor0
+\cf3 \strokec3 \
+\pard\pardeftab720\sa240\partightenfactor0
+\cf0 \strokec2 \
+\pard\pardeftab720\sa160\partightenfactor0
+
+\f0\b\fs61\fsmilli30667 \cf0 13. Travel-time constraint
+\f1\fs48 \
+\pard\pardeftab720\sa320\partightenfactor0
+
+\f2\b0\fs29\fsmilli14667 \cf0 If stop j is followed by stop m:
+\f3\fs24 \
+\pard\pardeftab720\partightenfactor0
+
+\f2\fs29\fsmilli14667 \cf0 \\[ \\boxed\{ T_m \\ge T_j+h_j+d_\{jm\} \} \\]
+\f3\fs24 \
+\pard\pardeftab720\sa320\partightenfactor0
+
+\f2\fs29\fsmilli14667 \cf0 where:
+\f3\fs24 \
+\pard\tx220\tx720\pardeftab720\li720\fi-720\partightenfactor0
+\ls5\ilvl0
+\f2\fs29\fsmilli14667 \cf0 \kerning1\expnd0\expndtw0 \outl0\strokewidth0 {\listtext	\uc0\u8226 	}\expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec2 hj = service time at stop j\
+\pard\tx220\tx720\pardeftab720\li720\fi-720\sa320\partightenfactor0
+\ls5\ilvl0\cf0 \kerning1\expnd0\expndtw0 \outl0\strokewidth0 {\listtext	\uc0\u8226 	}\expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec2 djm = stored drive time from j to m\
+\pard\pardeftab720\sa320\partightenfactor0
+\cf0 The project tells us to use the 
+\f0\b precomputed 
+\f4 \cf4 \strokec4 drive_hours
+\f2\b0 \cf0 \strokec2 , rather than recalculating it. Readme_project1
+\f3\fs24 \
+\pard\pardeftab720\partightenfactor0
+\cf0 \
+\pard\pardeftab720\partightenfactor0
+\cf3 \strokec3 \
+\pard\pardeftab720\sa240\partightenfactor0
+\cf0 \strokec2 \
+\pard\pardeftab720\sa160\partightenfactor0
+
+\f0\b\fs61\fsmilli30667 \cf0 14. Route starts at home depot
+\f1\fs48 \
+\pard\pardeftab720\sa320\partightenfactor0
+
+\f2\b0\fs29\fsmilli14667 \cf0 Every TL tour must start from the tractor's designated depot:
+\f3\fs24 \
+\pard\pardeftab720\partightenfactor0
+
+\f2\fs29\fsmilli14667 \cf0 \\[ \\boxed\{ v_\{depot(k),k\}=1 \} \\]
+\f3\fs24 \
+\pard\pardeftab720\sa320\partightenfactor0
+
+\f2\fs29\fsmilli14667 \cf0 Conceptually:
+\f3\fs24 \
+\pard\pardeftab720\partightenfactor0
+\cf0 \
+\pard\pardeftab720\qc\partightenfactor0
+
+\f2\fs29\fsmilli14667 \cf0 Dkfirstservicestop
+\f3\fs24 \
+\pard\pardeftab720\sa320\partightenfactor0
+
+\f2\fs29\fsmilli14667 \cf0 The tractor cannot begin somewhere else.
+\f3\fs24 \
+\pard\pardeftab720\partightenfactor0
+\cf0 \
+\pard\pardeftab720\partightenfactor0
+\cf3 \strokec3 \
+\pard\pardeftab720\sa240\partightenfactor0
+\cf0 \strokec2 \
+\pard\pardeftab720\sa160\partightenfactor0
+
+\f0\b\fs61\fsmilli30667 \cf0 15. Route returns to home depot
+\f1\fs48 \
+\pard\pardeftab720\sa320\partightenfactor0
+
+\f2\b0\fs29\fsmilli14667 \cf0 Every selected tour must finish at its designated depot:
+\f3\fs24 \
+\pard\pardeftab720\partightenfactor0
+
+\f2\fs29\fsmilli14667 \cf0 \\[ \\boxed\{ \\text\{last stop\} \\rightarrow D_k \} \\]
+\f3\fs24 \
+\pard\pardeftab720\sa320\partightenfactor0
+
+\f2\fs29\fsmilli14667 \cf0 and:
+\f3\fs24 \
+\pard\pardeftab720\partightenfactor0
+
+\f2\fs29\fsmilli14667 \cf0 \\[ \\boxed\{ T_k^\{return\}\\le ShiftEnd_k \} \\]
+\f3\fs24 \
+\pard\pardeftab720\sa320\partightenfactor0
+
+\f2\fs29\fsmilli14667 \cf0 The project explicitly requires every complete TL tour to return home on the same day. Readme_project1
+\f3\fs24 \
+\pard\pardeftab720\partightenfactor0
+\cf0 \
+\pard\pardeftab720\partightenfactor0
+\cf3 \strokec3 \
+\pard\pardeftab720\sa240\partightenfactor0
+\cf0 \strokec2 \
+\pard\pardeftab720\sa160\partightenfactor0
+
+\f0\b\fs61\fsmilli30667 \cf0 16. Driver shift constraint
+\f1\fs48 \
+\pard\pardeftab720\sa320\partightenfactor0
+
+\f2\b0\fs29\fsmilli14667 \cf0 For every tour k:
+\f3\fs24 \
+\pard\pardeftab720\partightenfactor0
+
+\f2\fs29\fsmilli14667 \cf0 \\[ \\boxed\{ ShiftStart_k \\le T_k^\{departure\} \} \\]
+\f3\fs24 \
+\pard\pardeftab720\sa320\partightenfactor0
+
+\f2\fs29\fsmilli14667 \cf0 and:
+\f3\fs24 \
+\pard\pardeftab720\partightenfactor0
+
+\f2\fs29\fsmilli14667 \cf0 \\[ \\boxed\{ T_k^\{return\} \\le ShiftEnd_k \} \\]
+\f3\fs24 \
+\pard\pardeftab720\sa320\partightenfactor0
+
+\f2\fs29\fsmilli14667 \cf0 So the tour must fit completely inside the driver's assigned shift.
+\f3\fs24 \
+\pard\pardeftab720\partightenfactor0
+\cf0 \
+\pard\pardeftab720\partightenfactor0
+\cf3 \strokec3 \
+\pard\pardeftab720\sa240\partightenfactor0
+\cf0 \strokec2 \
+\pard\pardeftab720\sa160\partightenfactor0
+
+\f0\b\fs61\fsmilli30667 \cf0 17. Maximum driving time
+\f1\fs48 \
+\pard\pardeftab720\sa320\partightenfactor0
+
+\f2\b0\fs29\fsmilli14667 \cf0 For each tour:
+\f3\fs24 \
+\pard\pardeftab720\partightenfactor0
+
+\f2\fs29\fsmilli14667 \cf0 \\[ \\boxed\{ \\sum_\{\\text\{legs \}j,m\} d_\{jm\}q_\{jmk\} \\le H^\{drive\}_\{max\} \} \\]
+\f3\fs24 \
+\pard\pardeftab720\sa320\partightenfactor0
+
+\f2\fs29\fsmilli14667 \cf0 where qjmk=1 if the tour travels directly from j to m.
+\f3\fs24 \
+\pard\pardeftab720\sa106\partightenfactor0
+
+\f0\b\fs34\fsmilli17333 \cf0 Simplified:
+\f1\fs28 \
+\pard\pardeftab720\partightenfactor0
+
+\f2\b0\fs29\fsmilli14667 \cf0 \\[ \\boxed\{ H^\{drive\}_\{max\}=8 \} \\]
+\f3\fs24 \
+\pard\pardeftab720\sa106\partightenfactor0
+
+\f0\b\fs34\fsmilli17333 \cf0 Main:
+\f1\fs28 \
+\pard\pardeftab720\partightenfactor0
+
+\f2\b0\fs29\fsmilli14667 \cf0 \\[ \\boxed\{ H^\{drive\}_\{max\}=11 \} \\]
+\f3\fs24 \
+\pard\pardeftab720\sa320\partightenfactor0
+
+\f2\fs29\fsmilli14667 \cf0 The driving limit includes:
+\f3\fs24 \
+\pard\tx220\tx720\pardeftab720\li720\fi-720\partightenfactor0
+\ls6\ilvl0
+\f2\fs29\fsmilli14667 \cf0 \kerning1\expnd0\expndtw0 \outl0\strokewidth0 {\listtext	\uc0\u8226 	}\expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec2 depot \uc0\u8594  first stop\
+\ls6\ilvl0\kerning1\expnd0\expndtw0 \outl0\strokewidth0 {\listtext	\uc0\u8226 	}\expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec2 all inter-stop travel\
+\pard\tx220\tx720\pardeftab720\li720\fi-720\sa320\partightenfactor0
+\ls6\ilvl0\cf0 \kerning1\expnd0\expndtw0 \outl0\strokewidth0 {\listtext	\uc0\u8226 	}\expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec2 final stop \uc0\u8594  depot\
+\pard\pardeftab720\sa320\partightenfactor0
+\cf0 Readme_project1
+\f3\fs24 \
+\pard\pardeftab720\partightenfactor0
+\cf0 \
+\pard\pardeftab720\partightenfactor0
+\cf3 \strokec3 \
+\pard\pardeftab720\sa240\partightenfactor0
+\cf0 \strokec2 \
+\pard\pardeftab720\sa160\partightenfactor0
+
+\f0\b\fs61\fsmilli30667 \cf0 18. Maximum duty time
+\f1\fs48 \
+\pard\pardeftab720\sa320\partightenfactor0
+
+\f2\b0\fs29\fsmilli14667 \cf0 Duty is:
+\f3\fs24 \
+\pard\pardeftab720\partightenfactor0
+\cf0 \
+\pard\pardeftab720\qc\partightenfactor0
+
+\f2\fs29\fsmilli14667 \cf0 Returntime-Departuretime
+\f3\fs24 \
+\pard\pardeftab720\sa320\partightenfactor0
+
+\f2\fs29\fsmilli14667 \cf0 Therefore:
+\f3\fs24 \
+\pard\pardeftab720\partightenfactor0
+
+\f2\fs29\fsmilli14667 \cf0 \\[ \\boxed\{ T_k^\{return\}-T_k^\{departure\} \\le H^\{duty\}_\{max\} \} \\]
+\f3\fs24 \
+\pard\pardeftab720\sa106\partightenfactor0
+
+\f0\b\fs34\fsmilli17333 \cf0 Simplified:
+\f1\fs28 \
+\pard\pardeftab720\partightenfactor0
+
+\f2\b0\fs29\fsmilli14667 \cf0 \\[ \\boxed\{ H^\{duty\}_\{max\}=12 \} \\]
+\f3\fs24 \
+\pard\pardeftab720\sa106\partightenfactor0
+
+\f0\b\fs34\fsmilli17333 \cf0 Main:
+\f1\fs28 \
+\pard\pardeftab720\partightenfactor0
+
+\f2\b0\fs29\fsmilli14667 \cf0 \\[ \\boxed\{ H^\{duty\}_\{max\}=14 \} \\]
+\f3\fs24 \
+\pard\pardeftab720\sa320\partightenfactor0
+
+\f2\fs29\fsmilli14667 \cf0 Duty includes:
+\f3\fs24 \
+\pard\pardeftab720\partightenfactor0
+\cf0 \
+\pard\pardeftab720\qc\partightenfactor0
+
+\f2\fs29\fsmilli14667 \cf0 driving+handling+waiting+breaks
+\f3\fs24 \
+\pard\pardeftab720\sa320\partightenfactor0
+
+\f2\fs29\fsmilli14667 \cf0 Readme_project1
+\f3\fs24 \
+\pard\pardeftab720\partightenfactor0
+\cf0 \
+\pard\pardeftab720\partightenfactor0
+\cf3 \strokec3 \
+\pard\pardeftab720\sa240\partightenfactor0
+\cf0 \strokec2 \
+\pard\pardeftab720\sa160\partightenfactor0
+
+\f0\b\fs61\fsmilli30667 \cf0 19. One tour per tractor per day
+\f1\fs48 \
+\pard\pardeftab720\sa320\partightenfactor0
+
+\f2\b0\fs29\fsmilli14667 \cf0 For tractor t on day d:
+\f3\fs24 \
+\pard\pardeftab720\partightenfactor0
+
+\f2\fs29\fsmilli14667 \cf0 \\[ \\boxed\{ \\sum_\{k\\in K(t,d)\}y_k\\le1 \} \\]
+\f3\fs24 \
+\pard\pardeftab720\sa320\partightenfactor0
+
+\f2\fs29\fsmilli14667 \cf0 This is important because the same tractor cannot run multiple separate tours on the same day.
+\f3\fs24 \
+\pard\pardeftab720\partightenfactor0
+\cf0 \
+\pard\pardeftab720\partightenfactor0
+\cf3 \strokec3 \
+\pard\pardeftab720\sa240\partightenfactor0
+\cf0 \strokec2 \
+\pard\pardeftab720\sa160\partightenfactor0
+
+\f0\b\fs61\fsmilli30667 \cf0 20. Equipment compatibility
+\f1\fs48 \
+\pard\pardeftab720\sa320\partightenfactor0
+
+\f2\b0\fs29\fsmilli14667 \cf0 A shipment can only be assigned to equipment capable of carrying it.
+\f3\fs24 \
+
+\f2\fs29\fsmilli14667 For chilled shipment i:
+\f3\fs24 \
+\pard\pardeftab720\partightenfactor0
+
+\f2\fs29\fsmilli14667 \cf0 \\[ \\boxed\{ x_\{ik\}\\le ChilledCapable_\{e(k)\} \} \\]
+\f3\fs24 \
+\pard\pardeftab720\sa320\partightenfactor0
+
+\f2\fs29\fsmilli14667 \cf0 Therefore:
+\f3\fs24 \
+\pard\tx220\tx720\pardeftab720\li720\fi-720\partightenfactor0
+\ls7\ilvl0
+\f2\fs29\fsmilli14667 \cf0 \kerning1\expnd0\expndtw0 \outl0\strokewidth0 {\listtext	\uc0\u8226 	}\expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec2 chilled + reefer \uc0\u8594  allowed\
+\ls7\ilvl0\kerning1\expnd0\expndtw0 \outl0\strokewidth0 {\listtext	\uc0\u8226 	}\expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec2 chilled + dry \uc0\u8594  prohibited\
+\ls7\ilvl0\kerning1\expnd0\expndtw0 \outl0\strokewidth0 {\listtext	\uc0\u8226 	}\expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec2 ambient + dry \uc0\u8594  allowed\
+\pard\tx220\tx720\pardeftab720\li720\fi-720\sa320\partightenfactor0
+\ls7\ilvl0\cf0 \kerning1\expnd0\expndtw0 \outl0\strokewidth0 {\listtext	\uc0\u8226 	}\expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec2 ambient + reefer \uc0\u8594  allowed\
+\pard\pardeftab720\sa320\partightenfactor0
+\cf0 The main file introduces refrigerated equipment as an additional constraint. Project 1-Consolidation
+\f3\fs24 \
+\pard\pardeftab720\partightenfactor0
+\cf0 \
+\pard\pardeftab720\partightenfactor0
+\cf3 \strokec3 \
+\pard\pardeftab720\sa240\partightenfactor0
+\cf0 \strokec2 \
+\pard\pardeftab720\sa160\partightenfactor0
+
+\f0\b\fs61\fsmilli30667 \cf0 21. Temperature compatibility
+\f1\fs48 \
+\pard\pardeftab720\sa320\partightenfactor0
+
+\f2\b0\fs29\fsmilli14667 \cf0 Shipments on the same truck must have the same temperature requirement.
+\f3\fs24 \
+
+\f2\fs29\fsmilli14667 For any two shipments i,j:
+\f3\fs24 \
+\pard\pardeftab720\partightenfactor0
+
+\f2\fs29\fsmilli14667 \cf0 \\[ \\boxed\{ x_\{ik\}+x_\{jk\}\\le1 \\quad \\text\{if \}Temp_i\\ne Temp_j \} \\]
+\f3\fs24 \
+\pard\pardeftab720\sa320\partightenfactor0
+
+\f2\fs29\fsmilli14667 \cf0 So:
+\f3\fs24 \
+\pard\pardeftab720\partightenfactor0
+\cf0 \
+\pard\pardeftab720\qc\partightenfactor0
+
+\f2\fs29\fsmilli14667 \cf0 Ambient+ChilledNOTallowed
+\f3\fs24 \
+\pard\pardeftab720\partightenfactor0
+\cf0 \
+\pard\pardeftab720\partightenfactor0
+\cf3 \strokec3 \
+\pard\pardeftab720\sa240\partightenfactor0
+\cf0 \strokec2 \
+\pard\pardeftab720\sa160\partightenfactor0
+
+\f0\b\fs61\fsmilli30667 \cf0 22. Compatibility-group constraint
+\f1\fs48 \
+\pard\pardeftab720\sa320\partightenfactor0
+
+\f2\b0\fs29\fsmilli14667 \cf0 Similarly, shipments can only share a truck if they have the same compatibility group.
+\f3\fs24 \
+
+\f2\fs29\fsmilli14667 If:
+\f3\fs24 \
+\pard\pardeftab720\partightenfactor0
+\cf0 \
+\pard\pardeftab720\qc\partightenfactor0
+
+\f2\fs29\fsmilli14667 \cf0 GroupiGroupj
+\f3\fs24 \
+\pard\pardeftab720\sa320\partightenfactor0
+
+\f2\fs29\fsmilli14667 \cf0 then:
+\f3\fs24 \
+\pard\pardeftab720\partightenfactor0
+
+\f2\fs29\fsmilli14667 \cf0 \\[ \\boxed\{ x_\{ik\}+x_\{jk\}\\le1 \} \\]
+\f3\fs24 \
+\pard\pardeftab720\sa320\partightenfactor0
+
+\f2\fs29\fsmilli14667 \cf0 The README defines the groups as:
+\f3\fs24 \
+\pard\pardeftab720\partightenfactor0
+\cf0 \
+\pard\pardeftab720\qc\partightenfactor0
+
+\f2\fs29\fsmilli14667 \cf0 \{General, Food, Industrial\}
+\f3\fs24 \
+\pard\pardeftab720\sa320\partightenfactor0
+
+\f2\fs29\fsmilli14667 \cf0 and explicitly says only identical groups and identical temperature requirements can be onboard together. Readme_project1
+\f3\fs24 \
+\pard\pardeftab720\partightenfactor0
+\cf0 \
+\pard\pardeftab720\partightenfactor0
+\cf3 \strokec3 \
+\pard\pardeftab720\sa240\partightenfactor0
+\cf0 \strokec2 \
+\pard\pardeftab720\sa160\partightenfactor0
+
+\f0\b\fs61\fsmilli30667 \cf0 23. LIFO constraint \'97 MAIN FILE ONLY
+\f1\fs48 \
+\pard\pardeftab720\sa320\partightenfactor0
+
+\f2\b0\fs29\fsmilli14667 \cf0 This is the big additional constraint for the main workbook.
+\f3\fs24 \
+
+\f2\fs29\fsmilli14667 If:
+\f3\fs24 \
+\pard\pardeftab720\partightenfactor0
+\cf0 \
+\pard\pardeftab720\qc\partightenfactor0
+
+\f2\fs29\fsmilli14667 \cf0 lifo_required=1
+\f3\fs24 \
+\pard\pardeftab720\sa320\partightenfactor0
+
+\f2\fs29\fsmilli14667 \cf0 then the 
+\f0\b last shipment picked up must be the first shipment delivered
+\f2\b0 .
+\f3\fs24 \
+
+\f2\fs29\fsmilli14667 For example:
+\f3\fs24 \
+\pard\pardeftab720\partightenfactor0
+\cf0 \
+\pard\pardeftab720\qc\partightenfactor0
+
+\f2\fs29\fsmilli14667 \cf0 Pickup APickup B
+\f3\fs24 \
+\pard\pardeftab720\sa320\partightenfactor0
+
+\f2\fs29\fsmilli14667 \cf0 requires:
+\f3\fs24 \
+\pard\pardeftab720\partightenfactor0
+\cf0 \
+\pard\pardeftab720\qc\partightenfactor0
+
+\f2\fs29\fsmilli14667 \cf0 Delivery BDelivery A
+\f3\fs24 \
+\pard\pardeftab720\sa320\partightenfactor0
+
+\f2\fs29\fsmilli14667 \cf0 You cannot have:
+\f3\fs24 \
+\pard\pardeftab720\partightenfactor0
+\cf0 \
+\pard\pardeftab720\qc\partightenfactor0
+
+\f2\fs29\fsmilli14667 \cf0 Pickup APickup BDelivery A
+\f3\fs24 \
+\pard\pardeftab720\sa320\partightenfactor0
+
+\f2\fs29\fsmilli14667 \cf0 because B is physically blocking A.
+\f3\fs24 \
+
+\f2\fs29\fsmilli14667 Mathematically, for shipments i,j loaded together:
+\f3\fs24 \
+\pard\pardeftab720\partightenfactor0
+
+\f2\fs29\fsmilli14667 \cf0 \\[ \\boxed\{ T_i^\{pickup\}<T_j^\{pickup\} \\Rightarrow T_j^\{delivery\}<T_i^\{delivery\} \} \\]
+\f3\fs24 \
+\pard\pardeftab720\sa320\partightenfactor0
+
+\f2\fs29\fsmilli14667 \cf0 This applies 
+\f0\b only to the main file
+\f2\b0 . The simplified file has:
+\f3\fs24 \
+\pard\pardeftab720\partightenfactor0
+
+\f2\fs29\fsmilli14667 \cf0 \\[ \\boxed\{lifo\\_required=0\} \\]
+\f3\fs24 \
+\pard\pardeftab720\sa320\partightenfactor0
+
+\f2\fs29\fsmilli14667 \cf0 so side access means any shipment already onboard can be delivered. Readme_project1
+\f3\fs24 \
+\pard\pardeftab720\partightenfactor0
+\cf0 \
+\pard\pardeftab720\partightenfactor0
+\cf3 \strokec3 \
+\pard\pardeftab720\sa240\partightenfactor0
+\cf0 \strokec2 \
+\pard\pardeftab720\sa160\partightenfactor0
+
+\f0\b\fs61\fsmilli30667 \cf0 24. No freight left on truck at the end
+\f1\fs48 \
+\pard\pardeftab720\sa320\partightenfactor0
+
+\f2\b0\fs29\fsmilli14667 \cf0 At the end of the tour:
+\f3\fs24 \
+\pard\pardeftab720\partightenfactor0
+
+\f2\fs29\fsmilli14667 \cf0 \\[ \\boxed\{ Load_k^\{return\}=0 \} \\]
+\f3\fs24 \
+\pard\pardeftab720\sa320\partightenfactor0
+
+\f2\fs29\fsmilli14667 \cf0 Every shipment assigned to a TL tour must have been delivered before the tractor returns to its depot.
+\f3\fs24 \
+
+\f2\fs29\fsmilli14667 The README explicitly says no freight remains on the trailer when it returns home. Readme_project1
+\f3\fs24 \
+\pard\pardeftab720\partightenfactor0
+\cf0 \
+\pard\pardeftab720\partightenfactor0
+\cf3 \strokec3 \
+\pard\pardeftab720\sa240\partightenfactor0
+\cf0 \strokec2 \
+\pard\pardeftab720\sa160\partightenfactor0
+
+\f0\b\fs61\fsmilli30667 \cf0 25. Break constraint \'97 MAIN FILE
+\f1\fs48 \
+\pard\pardeftab720\sa320\partightenfactor0
+
+\f2\b0\fs29\fsmilli14667 \cf0 For the main file:
+\f3\fs24 \
+\pard\pardeftab720\partightenfactor0
+\cf0 \
+\pard\pardeftab720\qc\partightenfactor0
+
+\f2\fs29\fsmilli14667 \cf0 Hbreak=8
+\f3\fs24 \
+\pard\pardeftab720\sa320\partightenfactor0
+
+\f2\fs29\fsmilli14667 \cf0 If accumulated driving reaches the threshold, the driver must take:
+\f3\fs24 \
+\pard\pardeftab720\partightenfactor0
+
+\f2\fs29\fsmilli14667 \cf0 \\[ \\boxed\{ 0.5\\text\{ hour break\} \} \\]
+\f3\fs24 \
+\pard\pardeftab720\sa320\partightenfactor0
+
+\f2\fs29\fsmilli14667 \cf0 before additional driving would exceed the threshold.
+\f3\fs24 \
+
+\f2\fs29\fsmilli14667 Conceptually:
+\f3\fs24 \
+\pard\pardeftab720\partightenfactor0
+\cf0 \
+\pard\pardeftab720\qc\partightenfactor0
+
+\f2\fs29\fsmilli14667 \cf0 DrivingSinceLastBreak8
+\f3\fs24 \
+\pard\pardeftab720\sa320\partightenfactor0
+
+\f2\fs29\fsmilli14667 \cf0 and when necessary:
+\f3\fs24 \
+\pard\pardeftab720\partightenfactor0
+\cf0 \
+\pard\pardeftab720\qc\partightenfactor0
+
+\f2\fs29\fsmilli14667 \cf0 Break=0.5
+\f3\fs24 \
+\pard\pardeftab720\sa320\partightenfactor0
+
+\f2\fs29\fsmilli14667 \cf0 The break:
+\f3\fs24 \
+\pard\tx220\tx720\pardeftab720\li720\fi-720\partightenfactor0
+\ls8\ilvl0
+\f2\fs29\fsmilli14667 \cf0 \kerning1\expnd0\expndtw0 \outl0\strokewidth0 {\listtext	\uc0\u8226 	}\expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec2 resets the 
+\f0\b within-tour accumulated-driving counter
+\f2\b0 \
+\ls8\ilvl0\kerning1\expnd0\expndtw0 \outl0\strokewidth0 {\listtext	\uc0\u8226 	}\expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec2 does 
+\f0\b not
+\f2\b0  reset total daily driving\
+\ls8\ilvl0\kerning1\expnd0\expndtw0 \outl0\strokewidth0 {\listtext	\uc0\u8226 	}\expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec2 does 
+\f0\b not
+\f2\b0  reset duty time\
+\pard\tx220\tx720\pardeftab720\li720\fi-720\sa320\partightenfactor0
+\ls8\ilvl0\cf0 \kerning1\expnd0\expndtw0 \outl0\strokewidth0 {\listtext	\uc0\u8226 	}\expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec2 cannot be replaced by handling\
+\pard\pardeftab720\sa320\partightenfactor0
+\cf0 Readme_project1
+\f3\fs24 \
+
+\f2\fs29\fsmilli14667 For the simplified file:
+\f3\fs24 \
+\pard\pardeftab720\partightenfactor0
+
+\f2\fs29\fsmilli14667 \cf0 \\[ \\boxed\{\\text\{No break constraint\}\} \\]
+\f3\fs24 \
+\pard\pardeftab720\sa320\partightenfactor0
+
+\f2\fs29\fsmilli14667 \cf0 because its 8-hour driving cap is the relevant simplified rule.
+\f3\fs24 \
+\pard\pardeftab720\partightenfactor0
+\cf0 \
+\pard\pardeftab720\partightenfactor0
+\cf3 \strokec3 \
+\pard\pardeftab720\sa240\partightenfactor0
+\cf0 \strokec2 \
+\pard\pardeftab720\sa160\partightenfactor0
+
+\f0\b\fs61\fsmilli30667 \cf0 26. Same-day completion
+\f1\fs48 \
+\pard\pardeftab720\sa320\partightenfactor0
+
+\f2\b0\fs29\fsmilli14667 \cf0 For shipment i assigned to day di:
+\f3\fs24 \
+\pard\pardeftab720\partightenfactor0
+
+\f2\fs29\fsmilli14667 \cf0 \\[ \\boxed\{ T_i^\{delivery\}<24(d_i+1) \} \\]
+\f3\fs24 \
+\pard\pardeftab720\sa320\partightenfactor0
+
+\f2\fs29\fsmilli14667 \cf0 and the complete tour must return before the end of that day.
+\f3\fs24 \
+
+\f2\fs29\fsmilli14667 There is 
+\f0\b no overnight continuation
+\f2\b0 .
+\f3\fs24 \
+\pard\pardeftab720\partightenfactor0
+\cf0 \
+\pard\pardeftab720\partightenfactor0
+\cf3 \strokec3 \
+\pard\pardeftab720\sa240\partightenfactor0
+\cf0 \strokec2 \
+\pard\pardeftab720\sa160\partightenfactor0
+
+\f0\b\fs61\fsmilli30667 \cf0 27. Horizon constraint
+\f1\fs48 \
+\pard\pardeftab720\sa320\partightenfactor0
+
+\f2\b0\fs29\fsmilli14667 \cf0 For the simplified workbook:
+\f3\fs24 \
+\pard\pardeftab720\partightenfactor0
+
+\f2\fs29\fsmilli14667 \cf0 \\[ \\boxed\{ T<96 \} \\]
+\f3\fs24 \
+\pard\pardeftab720\sa320\partightenfactor0
+
+\f2\fs29\fsmilli14667 \cf0 because the horizon ends:
+\f3\fs24 \
+\pard\pardeftab720\partightenfactor0
+\cf0 \
+\pard\pardeftab720\qc\partightenfactor0
+
+\f2\fs29\fsmilli14667 \cf0 00:00Day4
+\f3\fs24 \
+\pard\pardeftab720\sa320\partightenfactor0
+
+\f2\fs29\fsmilli14667 \cf0 For the main workbook:
+\f3\fs24 \
+\pard\pardeftab720\partightenfactor0
+
+\f2\fs29\fsmilli14667 \cf0 \\[ \\boxed\{ T<192 \} \\]
+\f3\fs24 \
+\pard\pardeftab720\sa320\partightenfactor0
+
+\f2\fs29\fsmilli14667 \cf0 because it ends:
+\f3\fs24 \
+\pard\pardeftab720\partightenfactor0
+\cf0 \
+\pard\pardeftab720\qc\partightenfactor0
+
+\f2\fs29\fsmilli14667 \cf0 00:00Day8
+\f3\fs24 \
+\pard\pardeftab720\sa320\partightenfactor0
+
+\f2\fs29\fsmilli14667 \cf0 The README defines absolute time as:
+\f3\fs24 \
+\pard\pardeftab720\partightenfactor0
+
+\f2\fs29\fsmilli14667 \cf0 \\[ \\boxed\{ AbsoluteTime=24(day)+hour \} \\]
+\f3\fs24 \
+\pard\pardeftab720\sa320\partightenfactor0
+
+\f2\fs29\fsmilli14667 \cf0 Readme_project1
+\f3\fs24 \
+\pard\pardeftab720\partightenfactor0
+\cf0 \
+\pard\pardeftab720\partightenfactor0
+\cf3 \strokec3 \
+\pard\pardeftab720\sa240\partightenfactor0
+\cf0 \strokec2 \
+\pard\pardeftab720\sa160\partightenfactor0
+
+\f0\b\fs61\fsmilli30667 \cf0 28. Binary restrictions
+\f1\fs48 \
+\pard\pardeftab720\partightenfactor0
+
+\f2\b0\fs29\fsmilli14667 \cf0 \\[ \\boxed\{ x_\{ik\}\\in\\\{0,1\\\} \} \\]\\[ \\boxed\{ y_k\\in\\\{0,1\\\} \} \\]\\[ \\boxed\{ z_i\\in\\\{0,1\\\} \} \\]
+\f3\fs24 \
+\pard\pardeftab720\sa320\partightenfactor0
+
+\f2\fs29\fsmilli14667 \cf0 These are necessary because assignment, LTL selection, and tour selection are yes/no decisions. The project specifically requires binary variables for those choices. Project 1-Consolidation
+\f3\fs24 \
+\pard\pardeftab720\partightenfactor0
+\cf0 \
+\pard\pardeftab720\partightenfactor0
+\cf3 \strokec3 \
+\pard\pardeftab720\sa240\partightenfactor0
+\cf0 \strokec2 \
+\pard\pardeftab720\sa160\partightenfactor0
+
+\f0\b\fs61\fsmilli30667 \cf0 29. The complete simplified model
+\f1\fs48 \
+\pard\pardeftab720\sa320\partightenfactor0
+
+\f2\b0\fs29\fsmilli14667 \cf0 So, if you want the 
+\f0\b clean formulation to put in your report
+\f2\b0 , it is essentially:
+\f3\fs24 \
+\pard\pardeftab720\partightenfactor0
+
+\f2\fs29\fsmilli14667 \cf0 \\[ \\boxed\{ \\min \\left[ \\sum_k C_k^\{TL\}y_k + \\sum_i C_i^\{LTL\}z_i \\right] \} \\]
+\f3\fs24 \
+\pard\pardeftab720\sa320\partightenfactor0
+
+\f2\fs29\fsmilli14667 \cf0 subject to:
+\f3\fs24 \
+\pard\pardeftab720\sa106\partightenfactor0
+
+\f0\b\fs34\fsmilli17333 \cf0 Assignment
+\f1\fs28 \
+\pard\pardeftab720\partightenfactor0
+
+\f2\b0\fs29\fsmilli14667 \cf0 \\[ \\boxed\{ \\sum_kx_\{ik\}+z_i=1 \\qquad\\forall i \} \\]
+\f3\fs24 \
+\pard\pardeftab720\sa106\partightenfactor0
+
+\f0\b\fs34\fsmilli17333 \cf0 Tour activation
+\f1\fs28 \
+\pard\pardeftab720\partightenfactor0
+
+\f2\b0\fs29\fsmilli14667 \cf0 \\[ \\boxed\{ x_\{ik\}\\le y_k \\qquad\\forall i,k \} \\]
+\f3\fs24 \
+\pard\pardeftab720\sa106\partightenfactor0
+
+\f0\b\fs34\fsmilli17333 \cf0 Weight
+\f1\fs28 \
+\pard\pardeftab720\partightenfactor0
+
+\f2\b0\fs29\fsmilli14667 \cf0 \\[ \\boxed\{ \\sum_iw_ix_\{ik\}\\le W_k \\qquad\\forall k \} \\]
+\f3\fs24 \
+\pard\pardeftab720\sa106\partightenfactor0
+
+\f0\b\fs34\fsmilli17333 \cf0 Floor space
+\f1\fs28 \
+\pard\pardeftab720\partightenfactor0
+
+\f2\b0\fs29\fsmilli14667 \cf0 \\[ \\boxed\{ \\sum_il_ix_\{ik\}\\le L_k \\qquad\\forall k \} \\]
+\f3\fs24 \
+\pard\pardeftab720\sa106\partightenfactor0
+
+\f0\b\fs34\fsmilli17333 \cf0 Pallets
+\f1\fs28 \
+\pard\pardeftab720\partightenfactor0
+
+\f2\b0\fs29\fsmilli14667 \cf0 \\[ \\boxed\{ \\sum_ip_ix_\{ik\}\\le P_k \\qquad\\forall k \} \\]
+\f3\fs24 \
+\pard\pardeftab720\sa106\partightenfactor0
+
+\f0\b\fs34\fsmilli17333 \cf0 Stops
+\f1\fs28 \
+\pard\pardeftab720\partightenfactor0
+
+\f2\b0\fs29\fsmilli14667 \cf0 \\[ \\boxed\{ 2\\sum_ix_\{ik\}\\le S^\{max\} \\qquad\\forall k \} \\]
+\f3\fs24 \
+\pard\pardeftab720\sa106\partightenfactor0
+
+\f0\b\fs34\fsmilli17333 \cf0 Pickup before delivery
+\f1\fs28 \
+\pard\pardeftab720\partightenfactor0
+
+\f2\b0\fs29\fsmilli14667 \cf0 \\[ \\boxed\{ T_i^P<T_i^D \\qquad\\forall i \} \\]
+\f3\fs24 \
+\pard\pardeftab720\sa106\partightenfactor0
+
+\f0\b\fs34\fsmilli17333 \cf0 Pickup window
+\f1\fs28 \
+\pard\pardeftab720\partightenfactor0
+
+\f2\b0\fs29\fsmilli14667 \cf0 \\[ \\boxed\{ P_i^\{open\}\\le T_i^P \} \\]\\[ \\boxed\{ T_i^P+h_i^P\\le P_i^\{close\} \} \\]
+\f3\fs24 \
+\pard\pardeftab720\sa106\partightenfactor0
+
+\f0\b\fs34\fsmilli17333 \cf0 Delivery window
+\f1\fs28 \
+\pard\pardeftab720\partightenfactor0
+
+\f2\b0\fs29\fsmilli14667 \cf0 \\[ \\boxed\{ D_i^\{open\}\\le T_i^D \} \\]\\[ \\boxed\{ T_i^D+h_i^D\\le D_i^\{close\} \} \\]
+\f3\fs24 \
+\pard\pardeftab720\sa106\partightenfactor0
+
+\f0\b\fs34\fsmilli17333 \cf0 Facility hours
+\f1\fs28 \
+\pard\pardeftab720\partightenfactor0
+
+\f2\b0\fs29\fsmilli14667 \cf0 \\[ \\boxed\{ F_o^\{open\}\\le T_i^P,\\qquad T_i^P+h_i^P\\le F_o^\{close\} \} \\]\\[ \\boxed\{ F_d^\{open\}\\le T_i^D,\\qquad T_i^D+h_i^D\\le F_d^\{close\} \} \\]
+\f3\fs24 \
+\pard\pardeftab720\sa106\partightenfactor0
+
+\f0\b\fs34\fsmilli17333 \cf0 Route timing
+\f1\fs28 \
+\pard\pardeftab720\partightenfactor0
+
+\f2\b0\fs29\fsmilli14667 \cf0 \\[ \\boxed\{ T_j\\ge T_i+h_i+d_\{ij\} \} \\]
+\f3\fs24 \
+\pard\pardeftab720\sa106\partightenfactor0
+
+\f0\b\fs34\fsmilli17333 \cf0 Driver shift
+\f1\fs28 \
+\pard\pardeftab720\partightenfactor0
+
+\f2\b0\fs29\fsmilli14667 \cf0 \\[ \\boxed\{ ShiftStart_k\\le T_k^\{departure\} \} \\]\\[ \\boxed\{ T_k^\{return\}\\le ShiftEnd_k \} \\]
+\f3\fs24 \
+\pard\pardeftab720\sa106\partightenfactor0
+
+\f0\b\fs34\fsmilli17333 \cf0 Driving limit
+\f1\fs28 \
+\pard\pardeftab720\partightenfactor0
+
+\f2\b0\fs29\fsmilli14667 \cf0 \\[ \\boxed\{ Driving_k\\le8 \} \\]
+\f3\fs24 \
+\pard\pardeftab720\sa106\partightenfactor0
+
+\f0\b\fs34\fsmilli17333 \cf0 Duty limit
+\f1\fs28 \
+\pard\pardeftab720\partightenfactor0
+
+\f2\b0\fs29\fsmilli14667 \cf0 \\[ \\boxed\{ Duty_k\\le12 \} \\]
+\f3\fs24 \
+\pard\pardeftab720\sa106\partightenfactor0
+
+\f0\b\fs34\fsmilli17333 \cf0 One tour per tractor/day
+\f1\fs28 \
+\pard\pardeftab720\partightenfactor0
+
+\f2\b0\fs29\fsmilli14667 \cf0 \\[ \\boxed\{ \\sum_\{k\\in K(t,d)\}y_k\\le1 \} \\]
+\f3\fs24 \
+\pard\pardeftab720\sa106\partightenfactor0
+
+\f0\b\fs34\fsmilli17333 \cf0 Equipment / temperature / compatibility
+\f1\fs28 \
+\pard\pardeftab720\partightenfactor0
+
+\f2\b0\fs29\fsmilli14667 \cf0 \\[ \\boxed\{ x_\{ik\}=0 \\quad\\text\{if equipment \}k\\text\{ cannot carry \}i \} \\]\\[ \\boxed\{ x_\{ik\}+x_\{jk\}\\le1 \\quad\\text\{if \}Temp_i\\ne Temp_j \} \\]\\[ \\boxed\{ x_\{ik\}+x_\{jk\}\\le1 \\quad\\text\{if \}Group_i\\ne Group_j \} \\]
+\f3\fs24 \
+\pard\pardeftab720\sa106\partightenfactor0
+
+\f0\b\fs34\fsmilli17333 \cf0 Return home
+\f1\fs28 \
+\pard\pardeftab720\partightenfactor0
+
+\f2\b0\fs29\fsmilli14667 \cf0 \\[ \\boxed\{ Route_k:\\ Depot_k\\rightarrow\\cdots\\rightarrow Depot_k \} \\]
+\f3\fs24 \
+\pard\pardeftab720\sa106\partightenfactor0
+
+\f0\b\fs34\fsmilli17333 \cf0 No remaining freight
+\f1\fs28 \
+\pard\pardeftab720\partightenfactor0
+
+\f2\b0\fs29\fsmilli14667 \cf0 \\[ \\boxed\{ Load_k^\{return\}=0 \} \\]
+\f3\fs24 \
+\pard\pardeftab720\sa106\partightenfactor0
+
+\f0\b\fs34\fsmilli17333 \cf0 Binary
+\f1\fs28 \
+\pard\pardeftab720\partightenfactor0
+
+\f2\b0\fs29\fsmilli14667 \cf0 \\[ \\boxed\{ x_\{ik\},y_k,z_i\\in\\\{0,1\\\} \} \\]
+\f3\fs24 \
+\pard\pardeftab720\partightenfactor0
+\cf3 \strokec3 \
+\pard\pardeftab720\sa240\partightenfactor0
+\cf0 \strokec2 \
+\pard\pardeftab720\sa106\partightenfactor0
+
+\f0\b\fs45\fsmilli22667 \cf0 30. Main-file additions
+\f1\fs36 \
+\pard\pardeftab720\sa320\partightenfactor0
+
+\f2\b0\fs29\fsmilli14667 \cf0 Then, when moving from 
+\f0\b simplified \uc0\u8594  main
+\f2\b0 , add:
+\f3\fs24 \
+\pard\pardeftab720\partightenfactor0
+
+\f2\fs29\fsmilli14667 \cf0 \\[ \\boxed\{Driving_k\\le11\} \\]
+\f3\fs24 \
+\pard\pardeftab720\sa320\partightenfactor0
+
+\f2\fs29\fsmilli14667 \cf0 instead of 8,
+\f3\fs24 \
+\pard\pardeftab720\partightenfactor0
+
+\f2\fs29\fsmilli14667 \cf0 \\[ \\boxed\{Duty_k\\le14\} \\]
+\f3\fs24 \
+\pard\pardeftab720\sa320\partightenfactor0
+
+\f2\fs29\fsmilli14667 \cf0 instead of 12,
+\f3\fs24 \
+\pard\pardeftab720\partightenfactor0
+
+\f2\fs29\fsmilli14667 \cf0 \\[ \\boxed\{ 2\\sum_ix_\{ik\}\\le8 \} \\]
+\f3\fs24 \
+\pard\pardeftab720\sa320\partightenfactor0
+
+\f2\fs29\fsmilli14667 \cf0 instead of 6,
+\f3\fs24 \
+
+\f2\fs29\fsmilli14667 plus:
+\f3\fs24 \
+\pard\pardeftab720\partightenfactor0
+
+\f2\fs29\fsmilli14667 \cf0 \\[ \\boxed\{\\text\{REEFER compatibility\}\} \\]\\[ \\boxed\{\\text\{temperature compatibility\}\} \\]\\[ \\boxed\{\\text\{compatibility-group constraint\}\} \\]\\[ \\boxed\{\\text\{strict LIFO\}\} \\]\\[ \\boxed\{\\text\{variable facility/depot hours\}\} \\]
+\f3\fs24 \
+\pard\pardeftab720\sa320\partightenfactor0
+
+\f2\fs29\fsmilli14667 \cf0 and
+\f3\fs24 \
+\pard\pardeftab720\partightenfactor0
+
+\f2\fs29\fsmilli14667 \cf0 \\[ \\boxed\{\\text\{8-hour accumulated-driving break + 0.5h break\}\} \\]
+\f3\fs24 \
+\pard\pardeftab720\sa320\partightenfactor0
+
+\f2\fs29\fsmilli14667 \cf0 The project itself identifies these as the main-file extensions beyond the simplified formulation. Project 1-Consolidation
+\f3\fs24 \
+\pard\pardeftab720\sa106\partightenfactor0
+
+\f0\b\fs34\fsmilli17333 \cf0 One important distinction
+\f1\fs28 \
+\pard\pardeftab720\sa320\partightenfactor0
+
+\f2\b0\fs29\fsmilli14667 \cf0 The formulation we settled on is 
+\f0\b not trying to optimize the exact sequence directly inside the giant 800-shipment model
+\f2\b0 . We first generate 
+\f0\b feasible candidate tours
+\f2\b0 \'97where capacity, routing, timing, windows, LIFO, compatibility, driver rules, etc. have already been checked\'97and then Gurobi chooses the cheapest combination of those tours plus LTL.
+\f3\fs24 \
+
+\f2\fs29\fsmilli14667 That gives us the core set-partitioning structure:
+\f3\fs24 \
+\pard\pardeftab720\partightenfactor0
+
+\f2\fs29\fsmilli14667 \cf0 \\[ \\boxed\{ \\min \\sum_k C_k^\{TL\}y_k+\\sum_iC_i^\{LTL\}z_i \} \\]\\[ \\boxed\{ \\sum_kx_\{ik\}+z_i=1 \} \\]
+\f3\fs24 \
+\pard\pardeftab720\sa320\partightenfactor0
+
+\f2\fs29\fsmilli14667 \cf0 with 
+\f0\b all physical and scheduling feasibility embedded in the candidate tours
+\f2\b0 . This is the formulation approach we had settled on for making the main problem computationally manageable. The project also explicitly allows candidate-tour heuristics, while requiring that the final selection be done by Gurobi.
+\f3\fs24 \
+\pard\pardeftab720\partightenfactor0
+\cf0 \
+}
