@@ -1,29 +1,14 @@
-# =====================================================================
-#  MGSC 404 – Project 1: Consolidating Partial Loads into Full Truckloads
-#  Gurobi model – SIMPLIFIED workbook (project1_simplified.xlsx)
-#
-#  Constraint and variable IDs (C1–C31, V1–V18, B1–B4) refer to
-#  README_simplified.md.
-#
-#  How the program works (same idea as the set-cover model in Module 3):
-#    1. Read the workbook.
-#    2. Generate EVERY feasible truck tour (1, 2 or 3 shipments, every
-#       valid stop order, every tractor). A tour is kept only if it
-#       passes C2 and C6–C31 (routing, timing, hours of service,
-#       capacity, stop limit, cost).
-#    3. Gurobi tour-selection model (Formulation B):
-#         variables   select_tour[r], use_ltl[i]          (binary)
-#         objective   min  Σ tour_cost·select_tour + Σ ltl_cost·use_ltl
-#         constraints B1  every shipment served exactly once
-#                     B2  at most one tour per tractor per day
-#    4. Print the Gurobi report and export the plan to Excel.
-#    5. (Optional) Cross-check: solve the full compact MILP
-#       (Formulation A, constraints C1–C31 written as Gurobi
-#       constraints) day by day and compare the cost.
-#
-#  Run:  python consolidation_simplified.py
-#        (the .xlsx file must be in the same folder as this script)
-# =====================================================================
+# How this program works:
+#   1. First we make a list of every truck tour that could work (1, 2 or 3
+#      shipments, every possible stop order, every truck). A tour is only
+#      kept if it follows all the rules (routes, time windows, driving and
+#      duty hours, capacity, stop limit) and we work out what it costs.
+#   2. Then Gurobi picks the cheapest combination:
+#        variables:   select_tour[r] and use_ltl[i] (both binary)
+#        objective:   minimize total tour cost + total LTL cost
+#        constraints: every shipment is served exactly once (truck or LTL)
+#                     and each truck does at most one tour per day
+#   3. The results get saved in an Excel file
 
 import itertools
 import time
@@ -33,22 +18,20 @@ import pandas as pd
 import gurobipy as gp
 from gurobipy import GRB
 
-# ---------------------------------------------------------------------
-# Settings
-# ---------------------------------------------------------------------
+# settings we can change
 FOLDER = Path(__file__).resolve().parent
-DATA_FILE = FOLDER / "project1_simplified.xlsx"
-PLAN_FILE = FOLDER / "plan_simplified.xlsx"
+DATA_FILE = FOLDER / "data" / "project1_simplified.xlsx"
+OUTPUT_FOLDER = FOLDER / "output"
+OUTPUT_FOLDER.mkdir(exist_ok=True)          # creates the folder if it doesn't exist yet
+PLAN_FILE = OUTPUT_FOLDER / "plan_simplified.xlsx"
 
-TIME_LIMIT_SECONDS = 600          # Gurobi time limit (tour-selection model)
-RUN_COMPACT_CHECK = True          # also solve Formulation A day by day
-COMPACT_TIME_LIMIT = 300          # seconds per day for Formulation A
-EPS = 1e-6                        # tolerance for comparing hours / loads
+TIME_LIMIT_SECONDS = 600          # Gurobi time limit 
+RUN_COMPACT_CHECK = True          # also run the full model as a double check
+COMPACT_TIME_LIMIT = 300          # seconds per day 
+EPS = 1e-6                        # small tolerance when comparing numbers
 
 
-# =====================================================================
-# STEP 1 – READ THE WORKBOOK
-# =====================================================================
+# Step 1: read the Excel file
 def read_workbook(path):
     sheets = pd.read_excel(path, sheet_name=None)
     needed = ["shipments", "facilities", "distance_matrix", "ltl_rates",
@@ -71,7 +54,7 @@ equipment_df = sheets["equipment"]
 tractors_df = sheets["tractors"]
 depots_df = sheets["depots"]
 
-# Dictionaries keyed by ID (README §2: values are read, never hard-coded)
+# turn each sheet into a dictionary (by ID)
 SHIP = shipments_df.set_index("shipment_id").to_dict("index")
 FAC = facilities_df.set_index("facility_id").to_dict("index")
 DEPOT = depots_df.set_index("depot_id").to_dict("index")
@@ -82,23 +65,24 @@ TRACTOR = tractors_df.set_index("tractor_id").to_dict("index")
 rules = sheets["driver_rules"].set_index("parameter")["value"].to_dict()
 params = sheets["parameters"].set_index("parameter")["value"].to_dict()
 
-max_drive_hours = float(rules["max_drive_hours"])          # 8
-max_duty_hours = float(rules["max_duty_hours"])            # 12
-min_rest_hours = float(rules["min_rest_hours"])            # 12
-max_stops = int(params["max_stops"])                       # 6
-lifo_required = int(params["lifo_required"])               # 0
-demand_days = int(params["demand_days"])                   # 3
-horizon_end_day = int(params["horizon_end_day"])           # 4
-time_step = float(params["time_step_hours"])               # 0.25
+# rule values from the file (simplified values in the comments)
+max_drive_hours = float(rules["max_drive_hours"])          # 8 h
+max_duty_hours = float(rules["max_duty_hours"])            # 12 h
+min_rest_hours = float(rules["min_rest_hours"])            # 12 h
+max_stops = int(params["max_stops"])                       # 6 stops = max 3 shipments
+lifo_required = int(params["lifo_required"])               # 0 = side access
+demand_days = int(params["demand_days"])                   # days 1-3
+horizon_end_day = int(params["horizon_end_day"])           # ends at 00:00 on day 4
+time_step = float(params["time_step_hours"])               # 15 minute steps
 
-# Sets (README §1)
+# Sets 
 SHIPMENTS = list(shipments_df["shipment_id"])
 TRACTORS = list(tractors_df["tractor_id"])
 DAYS = list(range(1, demand_days + 1))
 SHIPMENTS_ON_DAY = {d: [i for i in SHIPMENTS if int(SHIP[i]["day"]) == d]
                     for d in DAYS}
 
-# Travel data (directed, README §2.1)
+# Travel data 
 MILES = {}
 DRIVE = {}
 for row in distance_df.itertuples(index=False):
@@ -107,18 +91,16 @@ for row in distance_df.itertuples(index=False):
 
 
 def miles(a, b):
-    """Directed miles; same location = 0 (README p.2: no row for it)."""
+    """Miles from a to b (same place = 0, the sheet has no row for that)."""
     return 0.0 if a == b else MILES[a, b]
 
 
 def drive_hours(a, b):
-    """Directed stored driving hours; same location = 0."""
+    """Driving hours from a to b (same place = 0)."""
     return 0.0 if a == b else DRIVE[a, b]
 
 
-# =====================================================================
-# STEP 2 – DATA CHECKS (data README §6)
-# =====================================================================
+# Step 2: check the data for mistakes before using it
 def check_data():
     problems = []
     for name, df, key in [("shipments", shipments_df, "shipment_id"),
@@ -160,10 +142,10 @@ def check_data():
 check_data()
 
 
-# =====================================================================
-# STEP 3 – PARAMETERS
-# =====================================================================
-# LTL cost (README §2.5): exactly one matching band per shipment.
+# Step 3: parameters
+
+
+# Cost of the LTL shipments 
 def ltl_cost_of(i):
     s = SHIP[i]
     direct = miles(s["origin_id"], s["destination_id"])
@@ -180,9 +162,9 @@ def ltl_cost_of(i):
 
 ltl_cost = {i: ltl_cost_of(i) for i in SHIPMENTS}
 
-# Time windows in absolute time = 24·day + hour  (C13, C14)
-# earliest_start = max(window open, facility open)
-# latest_finish  = min(window close, facility close)
+# time windows in absolute time (24*day + hour)
+# earliest_start = whichever is later: window open or facility open
+# latest_finish = whichever is earlier: window close or facility close
 earliest_start, latest_finish, location, service_hours = {}, {}, {}, {}
 for i in SHIPMENTS:
     s = SHIP[i]
@@ -199,34 +181,32 @@ for i in SHIPMENTS:
 
 
 def tour_bounds(k, d):
-    """C16, C17: tour must fit the driver shift AND the depot hours."""
+    """Earliest start and latest end of a tour (has to fit the shift and the depot hours)."""
     t = TRACTOR[k]
     h = DEPOT[t["home_depot_id"]]
     start = 24 * d + max(t["shift_start_hour"], h["open_hour"])
     end = 24 * d + min(t["shift_end_hour"], h["close_hour"])
-    return start, min(end, 24 * horizon_end_day)        # C18 horizon
+    return start, min(end, 24 * horizon_end_day)        # and the horizon end
 
 
-# C21 (rest between daily tours). With one tour per day inside fixed
-# repeating shifts, the rest is at least 24 − (shift length). Checked here.
+# rest between days: each truck does 1 tour a day inside a fixed shift,
+# so the rest is at least 24 - shift length. we just check that here
 for k in TRACTORS:
     t = TRACTOR[k]
     rest = 24 - (t["shift_end_hour"] - t["shift_start_hour"])
     if rest + EPS < min_rest_hours:
         raise ValueError(f"{k}: shifts give only {rest} h rest (C21)")
 
-# The simplified rules this code implements (README §8.1)
+# this file only handles side access (no LIFO), like the simplified data
 assert lifo_required == 0, "This file is for side access (lifo_required = 0)"
 
 
-# =====================================================================
-# STEP 4 – GENERATE ALL FEASIBLE TOURS  (enforces C2, C6–C31 per tour)
-# =====================================================================
+# Step 4: make every possible tour
 def schedule_tour(k, d, sequence, depart, check_duty=True):
-    """Forward pass for a fixed stop sequence and departure time.
-    Returns the full schedule, or None if a rule is broken.
-    check_duty=False is used only for the first (earliest-departure)
-    pass, because duty can still be cut by leaving later."""
+    """Simulates one tour stop by stop, for a given stop order and departure time.
+    Returns the whole schedule, or None if any rule is broken.
+    check_duty=False is only used on the first try (leaving as early as
+    possible), because we can still cut the duty later by leaving later."""
     t = TRACTOR[k]
     home = t["home_depot_id"]
     cap = EQUIP[t["equipment_id"]]
@@ -234,22 +214,22 @@ def schedule_tour(k, d, sequence, depart, check_duty=True):
 
     now, here = depart, home
     total_drive = total_miles = 0.0
-    load_w = load_f = load_p = 0.0                       # C28: empty at start
+    load_w = load_f = load_p = 0.0                       # truck starts empty
     stops = []
     for (kind, i) in sequence:
         u = (kind, i)
         leg_h, leg_mi = drive_hours(here, location[u]), miles(here, location[u])
-        arrival = now + leg_h                            # C10
-        start = max(arrival, earliest_start[u])          # C11, C13
+        arrival = now + leg_h                            # arrival = left the last stop + driving time
+        start = max(arrival, earliest_start[u])          # can't start before the window/facility opens (waiting is ok)
         finish = start + service_hours[u]
-        if finish > latest_finish[u] + EPS:              # C14
+        if finish > latest_finish[u] + EPS:              # has to finish before the window/facility closes
             return None
         s = SHIP[i]
-        sign = 1 if kind == "P" else -1                  # C26
+        sign = 1 if kind == "P" else -1                  # +load at a pickup, -load at a delivery
         load_w += sign * s["weight_lb"]
         load_f += sign * s["linear_feet"]
         load_p += sign * s["pallets"]
-        if (load_w > cap["weight_capacity_lb"] + EPS     # C27
+        if (load_w > cap["weight_capacity_lb"] + EPS     # check weight, feet and pallets after every stop
                 or load_f > cap["length_capacity_feet"] + EPS
                 or load_p > cap["pallet_capacity"] + EPS):
             return None
@@ -258,7 +238,7 @@ def schedule_tour(k, d, sequence, depart, check_duty=True):
         stops.append({"event": kind, "shipment": i, "location": location[u],
                       "leg_miles": leg_mi, "leg_drive": leg_h,
                       "arrival": arrival, "service_start": start,
-                      "wait": start - arrival, "departure": finish,  # C12
+                      "wait": start - arrival, "departure": finish,  # leave after the handling time
                       "load_weight": load_w, "load_feet": load_f,
                       "load_pallets": load_p})
         now, here = finish, location[u]
@@ -266,21 +246,21 @@ def schedule_tour(k, d, sequence, depart, check_duty=True):
     back_h, back_mi = drive_hours(here, home), miles(here, home)
     total_drive += back_h
     total_miles += back_mi
-    return_time = now + back_h                           # C10 into end depot
-    if return_time > latest_end + EPS:                   # C17, C18
+    return_time = now + back_h                           # drive back to the depot
+    if return_time > latest_end + EPS:                   # back before the shift ends / depot closes
         return None
-    if total_drive > max_drive_hours + EPS:              # C19
+    if total_drive > max_drive_hours + EPS:              # max 8 h of driving
         return None
-    if check_duty and return_time - depart > max_duty_hours + EPS:   # C20
+    if check_duty and return_time - depart > max_duty_hours + EPS:   # max 12 h of duty
         return None
-    if abs(load_w) + abs(load_f) + abs(load_p) > EPS:    # C28: empty at return
+    if abs(load_w) + abs(load_f) + abs(load_p) > EPS:    # truck should be empty when it gets back
         return None
 
     c = TLCOST[t["equipment_id"]]
     n_events = len(sequence)
-    linehaul = max(c["minimum_linehaul_cad"],                     # C30
+    linehaul = max(c["minimum_linehaul_cad"],                     # linehaul = max(minimum, miles x rate)
                    c["linehaul_cad_per_mile"] * total_miles)
-    stop_fee = max(0, n_events - 2) * c["extra_stop_cad"]         # C31
+    stop_fee = max(0, n_events - 2) * c["extra_stop_cad"]         # $50 for every stop after the first two
     return {"tractor": k, "day": d, "sequence": tuple(sequence),
             "shipments": tuple(sorted({i for _, i in sequence})),
             "departure": depart, "return_time": return_time,
@@ -292,15 +272,14 @@ def schedule_tour(k, d, sequence, depart, check_duty=True):
 
 
 def best_departure(k, d, sequence):
-    """Choose the departure that gives the least duty (C16, C20).
-    Leaving at the earliest time gives the earliest possible service
-    times. Leaving later only removes waiting. The truck can leave
-    later by   min(total waiting, forward slack)   without missing any
-    window (forward time-slack rule). Every input is a multiple of
-    0.25 h, so the result is on the 0.25 h grid."""
+    """Picks the departure time that gives the least duty.
+    Leaving as early as possible gives the earliest service times, and
+    leaving later only cuts waiting time. The truck can leave later by
+    min(total waiting, slack) without missing any window. All the times
+    in the data are multiples of 0.25 h, so the answer is too."""
     earliest, _ = tour_bounds(k, d)
     first = schedule_tour(k, d, sequence, earliest, check_duty=False)
-    if first is None:            # a window, capacity, drive or return rule fails
+    if first is None:            # a rule fails even when leaving early, so this order doesn't work
         return None
     waited, slack = 0.0, float("inf")
     for st in first["stops"]:
@@ -310,13 +289,13 @@ def best_departure(k, d, sequence):
                     - service_hours[u])
     delay = max(0.0, min(waited, slack))
     delay = round(delay / time_step) * time_step if time_step > 0 else delay
-    # Least-duty schedule; it is re-checked with every rule, including C20.
+    # schedule with the least duty, checked again with all the rules (incl. max duty)
     return schedule_tour(k, d, sequence, earliest + delay, check_duty=True)
 
 
 def pickup_delivery_orders(group):
-    """All event orders in which each pickup comes before its own
-    delivery (C15). Side access: no other order rule (README §5.8)."""
+    """All the stop orders where each pickup comes before its own delivery.
+    It's side access, so there's no other rule about the order."""
     orders = []
 
     def extend(seq, picked, delivered):
@@ -334,10 +313,10 @@ def pickup_delivery_orders(group):
 
 
 def generate_tours():
-    """For every day, tractor profile and group of 1..max_stops/2
-    shipments (C29), keep the cheapest feasible stop order.
-    Tractors with the same depot, equipment and shift are identical,
-    so each profile is evaluated once and copied to its tractors."""
+    """For every day, every type of truck and every group of 1 to 3
+    shipments, keep the cheapest stop order that works.
+    Trucks with the same depot, equipment and shift are identical, so we
+    only check one of them and copy the tour to the others."""
     profiles = {}
     for k in TRACTORS:
         t = TRACTOR[k]
@@ -346,8 +325,8 @@ def generate_tours():
         profiles.setdefault(key, []).append(k)
 
     tours = []
-    max_shipments = max_stops // 2                       # C29
-    for d in DAYS:                                       # C2: same-day tours
+    max_shipments = max_stops // 2                       # 6 stops -> max 3 shipments
+    for d in DAYS:                                       # tours only use shipments from the same day
         for key, members in profiles.items():
             k0 = members[0]
             for size in range(1, max_shipments + 1):
@@ -362,7 +341,7 @@ def generate_tours():
                                     and sch["duty_hours"] < best["duty_hours"])):
                             best = sch
                     if best is not None:
-                        for k in members:                # copy to each tractor
+                        for k in members:                # copy the tour to every identical truck
                             tour = dict(best, tractor=k)
                             tours.append(tour)
     return tours
@@ -376,7 +355,7 @@ print(f"Candidate tours generated: {len(tours)} "
 
 
 # =====================================================================
-# STEP 5 – GUROBI TOUR-SELECTION MODEL (Formulation B)
+# STEP 5 - the Gurobi model that picks the tours
 # =====================================================================
 def build_selection_model(tours):
     model = gp.Model("Consolidation_Simplified")
@@ -389,27 +368,27 @@ def build_selection_model(tours):
             tours_with[i].append(r)
         tours_of[tour["tractor"], tour["day"]].append(r)
 
-    # Step 1 – decision variables (B-V1, B-V2)
+    # Step 1: decision variables
     select_tour = model.addVars(R, vtype=GRB.BINARY, name="select_tour")
     use_ltl = model.addVars(SHIPMENTS, vtype=GRB.BINARY, name="use_ltl")
 
-    # Step 2 – objective: TL tour costs + LTL costs
+    # Step 2: objective = truck tour costs + LTL costs
     model.setObjective(
         gp.quicksum(tours[r]["cost"] * select_tour[r] for r in R)
         + gp.quicksum(ltl_cost[i] * use_ltl[i] for i in SHIPMENTS),
         GRB.MINIMIZE)
 
-    # Step 3 – constraints
-    # B1: every shipment is served exactly once (truck tour or LTL)
+    # Step 3: constraints
+    # every shipment is served exactly once (by a tour or by LTL)
     model.addConstrs(
         (gp.quicksum(select_tour[r] for r in tours_with[i]) + use_ltl[i] == 1
          for i in SHIPMENTS), name="ServeOnce")
-    # B2: at most one tour per tractor per day
+    # each truck can do at most one tour per day
     model.addConstrs(
         (gp.quicksum(select_tour[r] for r in tours_of[k, d]) <= 1
          for (k, d) in tours_of), name="OneTourPerTractorDay")
 
-    # Settings that matter (reported below)
+    # solver settings (we print these in the report)
     model.Params.MIPGap = 0.0
     model.Params.TimeLimit = TIME_LIMIT_SECONDS
     model.Params.Seed = 0
@@ -421,7 +400,7 @@ model.optimize()
 
 
 # =====================================================================
-# STEP 6 – GUROBI REPORT AND RESULTS
+# STEP 6 - Gurobi report and results
 # =====================================================================
 STATUS = {GRB.OPTIMAL: "OPTIMAL", GRB.TIME_LIMIT: "TIME_LIMIT",
           GRB.INFEASIBLE: "INFEASIBLE", GRB.INF_OR_UNBD: "INF_OR_UNBD"}
@@ -462,14 +441,14 @@ print(f"Shipments on LTL           : {len(on_ltl)}")
 print(f"Shipments on dedicated tour: {n_ded} ({len(dedicated)} tours)")
 print(f"Shipments on shared tour   : {n_con} ({len(consolidated)} tours)")
 
-# Utilization (mile-weighted, all legs including empty depot legs)
+# how full the trucks were on average (weighted by miles, empty depot legs included)
 cap_w = sum(EQUIP[TRACTOR[t['tractor']]['equipment_id']]['weight_capacity_lb']
             * t["miles"] for t in chosen)
 cap_f = sum(EQUIP[TRACTOR[t['tractor']]['equipment_id']]['length_capacity_feet']
             * t["miles"] for t in chosen)
 used_w = used_f = 0.0
 for t in chosen:
-    for a, b in zip(t["stops"], t["stops"][1:]):         # loaded legs
+    for a, b in zip(t["stops"], t["stops"][1:]):         # legs between stops
         used_w += a["load_weight"] * b["leg_miles"]
         used_f += a["load_feet"] * b["leg_miles"]
 total_miles = sum(t["miles"] for t in chosen)
@@ -480,7 +459,7 @@ if cap_w > 0:
 print(f"Total tour miles   : {total_miles:,.0f} "
       f"(of which depot approach + return: {empty_miles:,.0f})")
 
-# Extra time vs. direct trip: (delivery end − pickup end) − direct drive
+# extra time vs driving straight there: (delivery end - pickup end) - direct drive
 extra = []
 for t in chosen:
     end = {(s["event"], s["shipment"]): s["departure"] for s in t["stops"]}
@@ -494,7 +473,7 @@ if extra:
 
 
 def fmt(hours_abs):
-    """Absolute time -> 'Day d hh:mm'."""
+    """Turns absolute time into 'Day d hh:mm' so it's easier to read."""
     day, rem = divmod(hours_abs, 24)
     h, m = divmod(round(rem * 60), 60)
     return f"Day {int(day)} {int(h):02d}:{int(m):02d}"
@@ -522,7 +501,7 @@ for i in on_ltl:
 
 
 # =====================================================================
-# STEP 7 – EXPORT THE PLAN (read later by the independent checker)
+# STEP 7 - save the plan to Excel (our checker will read this file)
 # =====================================================================
 tour_rows, stop_rows = [], []
 for n, t in enumerate(sorted(chosen, key=lambda x: (x["day"], x["tractor"])), 1):
@@ -593,24 +572,24 @@ print(f"\nPlan written to {PLAN_FILE.name}")
 
 
 # =====================================================================
-# STEP 8 (OPTIONAL) – CROSS-CHECK WITH THE COMPACT MILP (Formulation A)
-#   Every constraint C1–C31 of README_simplified.md written as a
-#   Gurobi constraint, solved separately for each day (the model splits
-#   by day, README §5.10). Its cost must equal the tour-selection cost.
+# STEP 8 (optional) - double check with the full model
+# Here every rule is written directly as a Gurobi constraint. It's solved
+# one day at a time, and its cost should be the same as the tour-selection
+# cost.
 # =====================================================================
 def solve_compact_model(d, time_limit, start_plan=None, fix_plan=False):
-    """start_plan = (selected tours, LTL shipments) from Formulation B.
-    It is given to Gurobi as a MIP start (or fixed, if fix_plan=True),
-    so Gurobi checks the plan against every constraint C1–C31."""
+    """start_plan = (chosen tours, LTL shipments) from the tour-selection model.
+    We give it to Gurobi as a starting solution (or fix it if fix_plan=True)
+    so Gurobi checks the plan against every rule."""
     I = SHIPMENTS_ON_DAY[d]
     K = TRACTORS
-    # Stops are named "P_S001" (pickup) and "D_S001" (delivery); the two
-    # depot copies are "START" and "END".
+    # stops are called "P_S001" (pickup) and "D_S001" (delivery), and the
+    # depot is "START" at the beginning of the tour and "END" at the end
     STOPS = [f"P_{i}" for i in I] + [f"D_{i}" for i in I]
     START, END = "START", "END"
-    kind = {u: u[0] for u in STOPS}                 # "P" or "D"
+    kind = {u: u[0] for u in STOPS}                 # pickup or delivery
     ship_of = {u: u[2:] for u in STOPS}             # shipment id
-    key = {u: (kind[u], ship_of[u]) for u in STOPS}  # key into Step-3 dicts
+    key = {u: (kind[u], ship_of[u]) for u in STOPS}  # key for the dictionaries from step 3
 
     def loc(u, k):
         return TRACTOR[k]["home_depot_id"] if u in (START, END) else location[key[u]]
@@ -624,12 +603,11 @@ def solve_compact_model(d, time_limit, start_plan=None, fix_plan=False):
     def lt_finish(u):
         return latest_finish[key[u]]
 
-    # LEGS[k] (C9): START->pickup, stop->stop, delivery->END.
-    # (A truck leaves empty, so its first stop is a pickup; it returns
-    #  empty, so its last stop is a delivery.)
-    # Preprocessing: drop legs that can never be driven in time
-    # (earliest finish at u + drive > latest start at v). This removes
-    # no feasible tour; it only makes the model smaller.
+    # legs that are allowed: START -> pickup, stop -> stop, delivery -> END
+    # (the truck leaves empty so the first stop has to be a pickup, and it
+    # comes back empty so the last stop has to be a delivery)
+    # we also skip legs that are impossible time-wise. this doesn't remove
+    # any tour that works, it just makes the model smaller
     LEGS = {}
     for k in K:
         legs = [(START, v) for v in STOPS if kind[v] == "P"]
@@ -648,28 +626,28 @@ def solve_compact_model(d, time_limit, start_plan=None, fix_plan=False):
     cap = {k: EQUIP[TRACTOR[k]["equipment_id"]] for k in K}
     cost = {k: TLCOST[TRACTOR[k]["equipment_id"]] for k in K}
     bounds = {k: tour_bounds(k, d) for k in K}
-    M_time = 24.0                                   # all times lie inside one day
+    M_time = 24.0                                   # big M for time = 24 h (everything happens in one day)
     n_max = max_stops // 2
 
     m = gp.Model(f"Compact_Day{d}")
 
-    # ---------------- Step 1 – decision variables ----------------
-    use_ltl_A = m.addVars(I, vtype=GRB.BINARY, name="use_ltl")                    # V1
-    on_tour = m.addVars(I, K, vtype=GRB.BINARY, name="on_tour")                   # V2
-    tour_used = m.addVars(K, vtype=GRB.BINARY, name="tour_used")                  # V3
-    is_consolidated = m.addVars(K, vtype=GRB.BINARY, name="is_consolidated")      # V4
+    # ---- Step 1: decision variables ----
+    use_ltl_A = m.addVars(I, vtype=GRB.BINARY, name="use_ltl")
+    on_tour = m.addVars(I, K, vtype=GRB.BINARY, name="on_tour")
+    tour_used = m.addVars(K, vtype=GRB.BINARY, name="tour_used")
+    is_consolidated = m.addVars(K, vtype=GRB.BINARY, name="is_consolidated")
     drive_leg = m.addVars([(u, v, k) for k in K for (u, v) in LEGS[k]],
-                          vtype=GRB.BINARY, name="drive_leg")                     # V5
-    depot_departure = m.addVars(K, name="depot_departure")                        # V6
-    arrival = m.addVars(STOPS, K, name="arrival")                                 # V7
-    return_time = m.addVars(K, name="return_time")                                # V7
-    service_start = m.addVars(STOPS, K, name="service_start")                     # V8
-    stop_departure = m.addVars(STOPS, K, name="stop_departure")                   # V9
-    load_weight = m.addVars(STOPS, K, name="load_weight")                         # V10
-    load_feet = m.addVars(STOPS, K, name="load_feet")                             # V11
-    load_pallets = m.addVars(STOPS, K, name="load_pallets")                       # V12
-    linehaul_charge = m.addVars(K, name="linehaul_charge")                        # V17
-    stop_charge = m.addVars(K, name="stop_charge")                                # V18
+                          vtype=GRB.BINARY, name="drive_leg")
+    depot_departure = m.addVars(K, name="depot_departure")
+    arrival = m.addVars(STOPS, K, name="arrival")
+    return_time = m.addVars(K, name="return_time")
+    service_start = m.addVars(STOPS, K, name="service_start")
+    stop_departure = m.addVars(STOPS, K, name="stop_departure")
+    load_weight = m.addVars(STOPS, K, name="load_weight")
+    load_feet = m.addVars(STOPS, K, name="load_feet")
+    load_pallets = m.addVars(STOPS, K, name="load_pallets")
+    linehaul_charge = m.addVars(K, name="linehaul_charge")
+    stop_charge = m.addVars(K, name="stop_charge")
 
     out_legs = {(u, k): [] for k in K for u in STOPS + [START]}
     in_legs = {(v, k): [] for k in K for v in STOPS + [END]}
@@ -678,51 +656,51 @@ def solve_compact_model(d, time_limit, start_plan=None, fix_plan=False):
             out_legs[u, k].append(v)
             in_legs[v, k].append(u)
 
-    # ---------------- Step 2 – objective ----------------
+    # ---- Step 2: objective ----
     m.setObjective(gp.quicksum(linehaul_charge[k] + stop_charge[k] for k in K)
                    + gp.quicksum(ltl_cost[i] * use_ltl_A[i] for i in I),
                    GRB.MINIMIZE)
 
-    # ---------------- Step 3 – constraints ----------------
+    # ---- Step 3: constraints ----
     n_ship = {k: gp.quicksum(on_tour[i, k] for i in I) for k in K}
-    # C1 served exactly once   (C2: only day-d shipments are in this model)
+    # each shipment served exactly once (only this day's shipments are in the model)
     m.addConstrs((on_tour.sum(i, "*") + use_ltl_A[i] == 1 for i in I), name="C1")
-    # C3 shipment only on a selected tour
+    # a shipment can only be on a tour that's used
     m.addConstrs((on_tour[i, k] <= tour_used[k] for i in I for k in K), name="C3")
-    # C4 a selected tour carries at least one shipment
+    # a used tour carries at least 1 shipment
     m.addConstrs((tour_used[k] <= n_ship[k] for k in K), name="C4")
-    # C5 consolidated <=> at least 2 shipments
+    # consolidated tour = 2 or more shipments
     m.addConstrs((n_ship[k] >= 2 * is_consolidated[k] for k in K), name="C5a")
     m.addConstrs((n_ship[k] <= tour_used[k] + (n_max - 1) * is_consolidated[k]
                   for k in K), name="C5b")
-    # C6, C7 leave and return to the home depot once if the tour is used
+    # if the truck is used, it leaves its depot once and comes back once
     m.addConstrs((gp.quicksum(drive_leg[START, v, k] for v in out_legs[START, k])
                   == tour_used[k] for k in K), name="C6")
     m.addConstrs((gp.quicksum(drive_leg[u, END, k] for u in in_legs[END, k])
                   == tour_used[k] for k in K), name="C7")
-    # C8 flow: each stop of an assigned shipment entered and left once, same tractor
+    # flow: the truck goes in and out of each of its stops once (same truck for pickup and delivery)
     m.addConstrs((gp.quicksum(drive_leg[u, v, k] for v in out_legs[u, k])
                   == on_tour[ship_of[u], k] for u in STOPS for k in K), name="C8out")
     m.addConstrs((gp.quicksum(drive_leg[v, u, k] for v in in_legs[u, k])
                   == on_tour[ship_of[u], k] for u in STOPS for k in K), name="C8in")
-    # C9 legs exist only in LEGS[k] (no depot in the middle, no empty tour)
+    # only the legs in LEGS[k] exist (no depot in the middle, no empty tours)
 
     for k in K:
         for (u, v) in LEGS[k]:
             leave_u = depot_departure[k] if u == START else stop_departure[u, k]
             reach_v = return_time[k] if v == END else arrival[v, k]
-            # C10 arrival = departure + stored driving time (Big-M)
+            # timing: arrival = departure + driving time if the leg is used (big M)
             m.addConstr(reach_v >= leave_u + drive_hours(loc(u, k), loc(v, k))
                         - 2 * M_time * (1 - drive_leg[u, v, k]),
                         name=f"C10[{u},{v},{k}]")
-            # C26 loads after each event (weight, feet, pallets)
+            # loads after each stop (weight, feet, pallets)
             if v != END:
                 s = SHIP[ship_of[v]]
                 sgn = 1 if kind[v] == "P" else -1
                 for var, dem, capv in [(load_weight, s["weight_lb"], cap[k]["weight_capacity_lb"]),
                                        (load_feet, s["linear_feet"], cap[k]["length_capacity_feet"]),
                                        (load_pallets, s["pallets"], cap[k]["pallet_capacity"])]:
-                    before = 0 if u == START else var[u, k]     # C28 empty at start
+                    before = 0 if u == START else var[u, k]     # truck starts empty
                     m.addConstr(var[v, k] >= before + sgn * dem
                                 - 2 * capv * (1 - drive_leg[u, v, k]),
                                 name=f"C26[{u},{v},{k}]")
@@ -730,60 +708,60 @@ def solve_compact_model(d, time_limit, start_plan=None, fix_plan=False):
     for u in STOPS:
         for k in K:
             i = ship_of[u]
-            # C11 service starts after arrival (waiting allowed)
+            # can't start before arriving (waiting is ok)
             m.addConstr(service_start[u, k] >= arrival[u, k], name=f"C11[{u},{k}]")
-            # C12 leave after full handling
+            # leave after the handling is done
             m.addConstr(stop_departure[u, k] >= service_start[u, k] + svc(u),
                         name=f"C12[{u},{k}]")
-            # C13 not before window open and facility open
+            # not before the window and the facility open
             m.addConstr(service_start[u, k] >= ev_start(u), name=f"C13[{u},{k}]")
-            # C14 finish by window close and facility close
+            # done before the window and the facility close
             m.addConstr(service_start[u, k] + svc(u)
                         <= lt_finish(u) + M_time * (1 - on_tour[i, k]),
                         name=f"C14[{u},{k}]")
-            # C27 capacity after every stop
+            # capacity limits after every stop
             load_weight[u, k].UB = cap[k]["weight_capacity_lb"]
             load_feet[u, k].UB = cap[k]["length_capacity_feet"]
             load_pallets[u, k].UB = cap[k]["pallet_capacity"]
 
     for i in I:
         for k in K:
-            # C15 pickup before delivery
+            # pickup before delivery
             m.addConstr(service_start["D_" + i, k] >= service_start["P_" + i, k]
                         + svc("P_" + i) - M_time * (1 - on_tour[i, k]),
                         name=f"C15[{i},{k}]")
 
     for k in K:
         earliest, latest = bounds[k]
-        # C16 depart after shift start and depot opening
+        # leave after the shift starts and the depot opens
         m.addConstr(depot_departure[k] >= earliest, name=f"C16[{k}]")
-        # C17, C18 return by shift end, depot closing and horizon end
+        # back before the shift ends, the depot closes and the horizon ends
         m.addConstr(return_time[k] <= latest, name=f"C17_C18[{k}]")
-        # C19 max driving per tour
+        # max 8 h of driving
         m.addConstr(gp.quicksum(drive_hours(loc(u, k), loc(v, k)) * drive_leg[u, v, k]
                                 for (u, v) in LEGS[k])
                     <= max_drive_hours * tour_used[k], name=f"C19[{k}]")
-        # C20 max duty (departure to return); C20b duty is not negative
+        # max 12 h of duty (return - departure), and duty can't be negative
         m.addConstr(return_time[k] - depot_departure[k] <= max_duty_hours * tour_used[k],
                     name=f"C20[{k}]")
         m.addConstr(return_time[k] >= depot_departure[k], name=f"C20b[{k}]")
-        # C29 stop limit
+        # max 6 stops
         m.addConstr(2 * n_ship[k] <= max_stops * tour_used[k], name=f"C29[{k}]")
-        # C30 linehaul = max(minimum, miles x rate)
+        # linehaul = max(minimum, miles x rate)
         m.addConstr(linehaul_charge[k] >= cost[k]["minimum_linehaul_cad"] * tour_used[k],
                     name=f"C30a[{k}]")
         m.addConstr(linehaul_charge[k] >= cost[k]["linehaul_cad_per_mile"]
                     * gp.quicksum(miles(loc(u, k), loc(v, k)) * drive_leg[u, v, k]
                                   for (u, v) in LEGS[k]), name=f"C30b[{k}]")
-        # C31 stop-off = max(0, events - 2) x fee
+        # stop fee = max(0, stops - 2) x 50
         m.addConstr(stop_charge[k] >= cost[k]["extra_stop_cad"]
                     * (2 * n_ship[k] - 2 * tour_used[k]), name=f"C31[{k}]")
-    # C21 rest between days: guaranteed by the fixed shifts (checked in Step 3).
-    # C37, C38 domains: set by vtype=BINARY / default lb=0 above.
+    # rest between days: already guaranteed by the shifts (we checked it in step 3)
+    # binary / non-negative variables were already set when we created them
 
-    # MIP start: the plan from the tour-selection model (all binaries)
+    # starting solution: the plan from the tour-selection model
     if start_plan is not None:
-        m.update()                       # variables must exist before use as keys
+        m.update()                       # need this before we can use the variables as keys
         plan_tours, plan_ltl = start_plan
         starts = {}
         for i in I:
