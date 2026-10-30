@@ -1,0 +1,18 @@
+{
+  "linehaul": 163102.05,
+  "stop_cost": 11290,
+  "ltl_cost": 1001418.85,
+  "total_cost": 1175810.9,
+  "baseline": 1557535.8499999999,
+  "miles": 66193.0,
+  "weight_utilization": 0.16223918560419398,
+  "feet_utilization": 0.20769269670442456,
+  "savings": 381724.94999999995,
+  "savings_pct": 24.50826091739718,
+  "candidate_count": 9578,
+  "solver_gap": 1.9801708221438383e-16,
+  "generation_seconds": 1.640351292095147,
+  "solver_seconds": 0.10549092292785645,
+  "checker": "PASS",
+  "scope": "Generated candidates only"
+}

@@ -1,0 +1,2640 @@
+{
+  "routes": [
+    {
+      "tractor": "T01",
+      "day": 1,
+      "shipments": [
+        "S001",
+        "S002"
+      ],
+      "sequence": [
+        [
+          "S001",
+          "P"
+        ],
+        [
+          "S002",
+          "P"
+        ],
+        [
+          "S002",
+          "D"
+        ],
+        [
+          "S001",
+          "D"
+        ]
+      ],
+      "departure": 7.0,
+      "return_time": 16.0,
+      "miles": 350.0,
+      "drive_hours": 7.0,
+      "duty_hours": 9.0,
+      "linehaul": 900,
+      "stop_cost": 100,
+      "cost": 1000,
+      "actions": [
+        {
+          "kind": "drive",
+          "origin": "D01",
+          "destination": "F01",
+          "start": 7.0,
+          "end": 8.0
+        },
+        {
+          "kind": "P",
+          "shipment": "S001",
+          "location": "F01",
+          "start": 8.0,
+          "end": 8.5
+        },
+        {
+          "kind": "drive",
+          "origin": "F01",
+          "destination": "F02",
+          "start": 8.5,
+          "end": 9.5
+        },
+        {
+          "kind": "P",
+          "shipment": "S002",
+          "location": "F02",
+          "start": 9.5,
+          "end": 10.0
+        },
+        {
+          "kind": "drive",
+          "origin": "F02",
+          "destination": "F04",
+          "start": 10.0,
+          "end": 12.0
+        },
+        {
+          "kind": "D",
+          "shipment": "S002",
+          "location": "F04",
+          "start": 12.0,
+          "end": 12.5
+        },
+        {
+          "kind": "drive",
+          "origin": "F04",
+          "destination": "F03",
+          "start": 12.5,
+          "end": 13.5
+        },
+        {
+          "kind": "D",
+          "shipment": "S001",
+          "location": "F03",
+          "start": 13.5,
+          "end": 14.0
+        },
+        {
+          "kind": "drive",
+          "origin": "F03",
+          "destination": "D01",
+          "start": 14.0,
+          "end": 16.0
+        }
+      ]
+    },
+    {
+      "tractor": "T02",
+      "day": 1,
+      "shipments": [
+        "S003",
+        "S010"
+      ],
+      "sequence": [
+        [
+          "S003",
+          "P"
+        ],
+        [
+          "S010",
+          "P"
+        ],
+        [
+          "S003",
+          "D"
+        ],
+        [
+          "S010",
+          "D"
+        ]
+      ],
+      "departure": 7.0,
+      "return_time": 16.75,
+      "miles": 330.0,
+      "drive_hours": 7.0,
+      "duty_hours": 9.75,
+      "linehaul": 900,
+      "stop_cost": 100,
+      "cost": 1000,
+      "actions": [
+        {
+          "kind": "drive",
+          "origin": "D01",
+          "destination": "F08",
+          "start": 7.0,
+          "end": 8.0
+        },
+        {
+          "kind": "P",
+          "shipment": "S003",
+          "location": "F08",
+          "start": 8.0,
+          "end": 8.5
+        },
+        {
+          "kind": "drive",
+          "origin": "F08",
+          "destination": "F09",
+          "start": 8.5,
+          "end": 10.25
+        },
+        {
+          "kind": "P",
+          "shipment": "S010",
+          "location": "F09",
+          "start": 10.25,
+          "end": 10.75
+        },
+        {
+          "kind": "drive",
+          "origin": "F09",
+          "destination": "F05",
+          "start": 10.75,
+          "end": 11.25
+        },
+        {
+          "kind": "wait",
+          "location": "F05",
+          "start": 11.25,
+          "end": 12.0
+        },
+        {
+          "kind": "D",
+          "shipment": "S003",
+          "location": "F05",
+          "start": 12.0,
+          "end": 12.5
+        },
+        {
+          "kind": "drive",
+          "origin": "F05",
+          "destination": "F03",
+          "start": 12.5,
+          "end": 14.25
+        },
+        {
+          "kind": "D",
+          "shipment": "S010",
+          "location": "F03",
+          "start": 14.25,
+          "end": 14.75
+        },
+        {
+          "kind": "drive",
+          "origin": "F03",
+          "destination": "D01",
+          "start": 14.75,
+          "end": 16.75
+        }
+      ]
+    },
+    {
+      "tractor": "T03",
+      "day": 1,
+      "shipments": [
+        "S014",
+        "S017"
+      ],
+      "sequence": [
+        [
+          "S014",
+          "P"
+        ],
+        [
+          "S017",
+          "P"
+        ],
+        [
+          "S017",
+          "D"
+        ],
+        [
+          "S014",
+          "D"
+        ]
+      ],
+      "departure": 6,
+      "return_time": 14.5,
+      "miles": 249.0,
+      "drive_hours": 5.25,
+      "duty_hours": 8.5,
+      "linehaul": 900,
+      "stop_cost": 100,
+      "cost": 1000,
+      "actions": [
+        {
+          "kind": "drive",
+          "origin": "D01",
+          "destination": "F01",
+          "start": 6,
+          "end": 7.0
+        },
+        {
+          "kind": "P",
+          "shipment": "S014",
+          "location": "F01",
+          "start": 7.0,
+          "end": 7.5
+        },
+        {
+          "kind": "drive",
+          "origin": "F01",
+          "destination": "F05",
+          "start": 7.5,
+          "end": 9.25
+        },
+        {
+          "kind": "P",
+          "shipment": "S017",
+          "location": "F05",
+          "start": 9.25,
+          "end": 9.75
+        },
+        {
+          "kind": "drive",
+          "origin": "F05",
+          "destination": "F08",
+          "start": 9.75,
+          "end": 11.25
+        },
+        {
+          "kind": "wait",
+          "location": "F08",
+          "start": 11.25,
+          "end": 12.0
+        },
+        {
+          "kind": "D",
+          "shipment": "S017",
+          "location": "F08",
+          "start": 12.0,
+          "end": 12.5
+        },
+        {
+          "kind": "drive",
+          "origin": "F08",
+          "destination": "F08",
+          "start": 12.5,
+          "end": 12.5
+        },
+        {
+          "kind": "wait",
+          "location": "F08",
+          "start": 12.5,
+          "end": 13.0
+        },
+        {
+          "kind": "D",
+          "shipment": "S014",
+          "location": "F08",
+          "start": 13.0,
+          "end": 13.5
+        },
+        {
+          "kind": "drive",
+          "origin": "F08",
+          "destination": "D01",
+          "start": 13.5,
+          "end": 14.5
+        }
+      ]
+    },
+    {
+      "tractor": "T04",
+      "day": 1,
+      "shipments": [
+        "S011",
+        "S018",
+        "S020"
+      ],
+      "sequence": [
+        [
+          "S011",
+          "P"
+        ],
+        [
+          "S020",
+          "P"
+        ],
+        [
+          "S011",
+          "D"
+        ],
+        [
+          "S018",
+          "P"
+        ],
+        [
+          "S018",
+          "D"
+        ],
+        [
+          "S020",
+          "D"
+        ]
+      ],
+      "departure": 6.5,
+      "return_time": 16.5,
+      "miles": 306.0,
+      "drive_hours": 6.75,
+      "duty_hours": 10.0,
+      "linehaul": 900,
+      "stop_cost": 200,
+      "cost": 1100,
+      "actions": [
+        {
+          "kind": "drive",
+          "origin": "D01",
+          "destination": "F05",
+          "start": 6.5,
+          "end": 9.0
+        },
+        {
+          "kind": "P",
+          "shipment": "S011",
+          "location": "F05",
+          "start": 9.0,
+          "end": 9.5
+        },
+        {
+          "kind": "drive",
+          "origin": "F05",
+          "destination": "F09",
+          "start": 9.5,
+          "end": 10.0
+        },
+        {
+          "kind": "P",
+          "shipment": "S020",
+          "location": "F09",
+          "start": 10.0,
+          "end": 10.5
+        },
+        {
+          "kind": "drive",
+          "origin": "F09",
+          "destination": "F02",
+          "start": 10.5,
+          "end": 11.75
+        },
+        {
+          "kind": "wait",
+          "location": "F02",
+          "start": 11.75,
+          "end": 12.0
+        },
+        {
+          "kind": "D",
+          "shipment": "S011",
+          "location": "F02",
+          "start": 12.0,
+          "end": 12.5
+        },
+        {
+          "kind": "drive",
+          "origin": "F02",
+          "destination": "F02",
+          "start": 12.5,
+          "end": 12.5
+        },
+        {
+          "kind": "P",
+          "shipment": "S018",
+          "location": "F02",
+          "start": 12.5,
+          "end": 13.0
+        },
+        {
+          "kind": "drive",
+          "origin": "F02",
+          "destination": "F08",
+          "start": 13.0,
+          "end": 13.5
+        },
+        {
+          "kind": "D",
+          "shipment": "S018",
+          "location": "F08",
+          "start": 13.5,
+          "end": 14.0
+        },
+        {
+          "kind": "drive",
+          "origin": "F08",
+          "destination": "F01",
+          "start": 14.0,
+          "end": 15.0
+        },
+        {
+          "kind": "D",
+          "shipment": "S020",
+          "location": "F01",
+          "start": 15.0,
+          "end": 15.5
+        },
+        {
+          "kind": "drive",
+          "origin": "F01",
+          "destination": "D01",
+          "start": 15.5,
+          "end": 16.5
+        }
+      ]
+    },
+    {
+      "tractor": "T05",
+      "day": 1,
+      "shipments": [
+        "S006",
+        "S009"
+      ],
+      "sequence": [
+        [
+          "S006",
+          "P"
+        ],
+        [
+          "S009",
+          "P"
+        ],
+        [
+          "S009",
+          "D"
+        ],
+        [
+          "S006",
+          "D"
+        ]
+      ],
+      "departure": 7.25,
+      "return_time": 16.25,
+      "miles": 340.0,
+      "drive_hours": 7.0,
+      "duty_hours": 9.0,
+      "linehaul": 900,
+      "stop_cost": 100,
+      "cost": 1000,
+      "actions": [
+        {
+          "kind": "drive",
+          "origin": "D02",
+          "destination": "F07",
+          "start": 7.25,
+          "end": 8.0
+        },
+        {
+          "kind": "P",
+          "shipment": "S006",
+          "location": "F07",
+          "start": 8.0,
+          "end": 8.5
+        },
+        {
+          "kind": "drive",
+          "origin": "F07",
+          "destination": "F11",
+          "start": 8.5,
+          "end": 10.75
+        },
+        {
+          "kind": "P",
+          "shipment": "S009",
+          "location": "F11",
+          "start": 10.75,
+          "end": 11.25
+        },
+        {
+          "kind": "drive",
+          "origin": "F11",
+          "destination": "F12",
+          "start": 11.25,
+          "end": 13.5
+        },
+        {
+          "kind": "D",
+          "shipment": "S009",
+          "location": "F12",
+          "start": 13.5,
+          "end": 14.0
+        },
+        {
+          "kind": "drive",
+          "origin": "F12",
+          "destination": "F10",
+          "start": 14.0,
+          "end": 15.0
+        },
+        {
+          "kind": "D",
+          "shipment": "S006",
+          "location": "F10",
+          "start": 15.0,
+          "end": 15.5
+        },
+        {
+          "kind": "drive",
+          "origin": "F10",
+          "destination": "D02",
+          "start": 15.5,
+          "end": 16.25
+        }
+      ]
+    },
+    {
+      "tractor": "T07",
+      "day": 1,
+      "shipments": [
+        "S012",
+        "S015"
+      ],
+      "sequence": [
+        [
+          "S015",
+          "P"
+        ],
+        [
+          "S012",
+          "P"
+        ],
+        [
+          "S012",
+          "D"
+        ],
+        [
+          "S015",
+          "D"
+        ]
+      ],
+      "departure": 8.25,
+      "return_time": 17.0,
+      "miles": 321.0,
+      "drive_hours": 6.75,
+      "duty_hours": 8.75,
+      "linehaul": 900,
+      "stop_cost": 100,
+      "cost": 1000,
+      "actions": [
+        {
+          "kind": "drive",
+          "origin": "D02",
+          "destination": "F10",
+          "start": 8.25,
+          "end": 9.0
+        },
+        {
+          "kind": "P",
+          "shipment": "S015",
+          "location": "F10",
+          "start": 9.0,
+          "end": 9.5
+        },
+        {
+          "kind": "drive",
+          "origin": "F10",
+          "destination": "F12",
+          "start": 9.5,
+          "end": 10.5
+        },
+        {
+          "kind": "P",
+          "shipment": "S012",
+          "location": "F12",
+          "start": 10.5,
+          "end": 11.0
+        },
+        {
+          "kind": "drive",
+          "origin": "F12",
+          "destination": "F05",
+          "start": 11.0,
+          "end": 12.75
+        },
+        {
+          "kind": "D",
+          "shipment": "S012",
+          "location": "F05",
+          "start": 12.75,
+          "end": 13.25
+        },
+        {
+          "kind": "drive",
+          "origin": "F05",
+          "destination": "F07",
+          "start": 13.25,
+          "end": 15.75
+        },
+        {
+          "kind": "D",
+          "shipment": "S015",
+          "location": "F07",
+          "start": 15.75,
+          "end": 16.25
+        },
+        {
+          "kind": "drive",
+          "origin": "F07",
+          "destination": "D02",
+          "start": 16.25,
+          "end": 17.0
+        }
+      ]
+    },
+    {
+      "tractor": "T08",
+      "day": 1,
+      "shipments": [
+        "S013",
+        "S016"
+      ],
+      "sequence": [
+        [
+          "S013",
+          "P"
+        ],
+        [
+          "S016",
+          "P"
+        ],
+        [
+          "S016",
+          "D"
+        ],
+        [
+          "S013",
+          "D"
+        ]
+      ],
+      "departure": 6,
+      "return_time": 14.75,
+      "miles": 297.0,
+      "drive_hours": 6.5,
+      "duty_hours": 8.75,
+      "linehaul": 900,
+      "stop_cost": 100,
+      "cost": 1000,
+      "actions": [
+        {
+          "kind": "drive",
+          "origin": "D02",
+          "destination": "F04",
+          "start": 6,
+          "end": 7.5
+        },
+        {
+          "kind": "P",
+          "shipment": "S013",
+          "location": "F04",
+          "start": 7.5,
+          "end": 8.0
+        },
+        {
+          "kind": "drive",
+          "origin": "F04",
+          "destination": "F05",
+          "start": 8.0,
+          "end": 9.75
+        },
+        {
+          "kind": "P",
+          "shipment": "S016",
+          "location": "F05",
+          "start": 9.75,
+          "end": 10.25
+        },
+        {
+          "kind": "drive",
+          "origin": "F05",
+          "destination": "F07",
+          "start": 10.25,
+          "end": 12.75
+        },
+        {
+          "kind": "wait",
+          "location": "F07",
+          "start": 12.75,
+          "end": 13.0
+        },
+        {
+          "kind": "D",
+          "shipment": "S016",
+          "location": "F07",
+          "start": 13.0,
+          "end": 13.5
+        },
+        {
+          "kind": "drive",
+          "origin": "F07",
+          "destination": "F07",
+          "start": 13.5,
+          "end": 13.5
+        },
+        {
+          "kind": "D",
+          "shipment": "S013",
+          "location": "F07",
+          "start": 13.5,
+          "end": 14.0
+        },
+        {
+          "kind": "drive",
+          "origin": "F07",
+          "destination": "D02",
+          "start": 14.0,
+          "end": 14.75
+        }
+      ]
+    },
+    {
+      "tractor": "T06",
+      "day": 1,
+      "shipments": [
+        "S004",
+        "S005",
+        "S019"
+      ],
+      "sequence": [
+        [
+          "S019",
+          "P"
+        ],
+        [
+          "S005",
+          "P"
+        ],
+        [
+          "S004",
+          "P"
+        ],
+        [
+          "S004",
+          "D"
+        ],
+        [
+          "S019",
+          "D"
+        ],
+        [
+          "S005",
+          "D"
+        ]
+      ],
+      "departure": 6.25,
+      "return_time": 17.75,
+      "miles": 381.0,
+      "drive_hours": 8.0,
+      "duty_hours": 11.5,
+      "linehaul": 900,
+      "stop_cost": 200,
+      "cost": 1100,
+      "actions": [
+        {
+          "kind": "drive",
+          "origin": "D02",
+          "destination": "F07",
+          "start": 6.25,
+          "end": 7.0
+        },
+        {
+          "kind": "P",
+          "shipment": "S019",
+          "location": "F07",
+          "start": 7.0,
+          "end": 7.5
+        },
+        {
+          "kind": "drive",
+          "origin": "F07",
+          "destination": "F06",
+          "start": 7.5,
+          "end": 8.75
+        },
+        {
+          "kind": "P",
+          "shipment": "S005",
+          "location": "F06",
+          "start": 8.75,
+          "end": 9.25
+        },
+        {
+          "kind": "drive",
+          "origin": "F06",
+          "destination": "F11",
+          "start": 9.25,
+          "end": 10.25
+        },
+        {
+          "kind": "P",
+          "shipment": "S004",
+          "location": "F11",
+          "start": 10.25,
+          "end": 10.75
+        },
+        {
+          "kind": "drive",
+          "origin": "F11",
+          "destination": "F09",
+          "start": 10.75,
+          "end": 12.0
+        },
+        {
+          "kind": "wait",
+          "location": "F09",
+          "start": 12.0,
+          "end": 12.5
+        },
+        {
+          "kind": "D",
+          "shipment": "S004",
+          "location": "F09",
+          "start": 12.5,
+          "end": 13.0
+        },
+        {
+          "kind": "drive",
+          "origin": "F09",
+          "destination": "F05",
+          "start": 13.0,
+          "end": 13.5
+        },
+        {
+          "kind": "D",
+          "shipment": "S019",
+          "location": "F05",
+          "start": 13.5,
+          "end": 14.0
+        },
+        {
+          "kind": "drive",
+          "origin": "F05",
+          "destination": "F07",
+          "start": 14.0,
+          "end": 16.5
+        },
+        {
+          "kind": "D",
+          "shipment": "S005",
+          "location": "F07",
+          "start": 16.5,
+          "end": 17.0
+        },
+        {
+          "kind": "drive",
+          "origin": "F07",
+          "destination": "D02",
+          "start": 17.0,
+          "end": 17.75
+        }
+      ]
+    },
+    {
+      "tractor": "T01",
+      "day": 2,
+      "shipments": [
+        "S021",
+        "S030"
+      ],
+      "sequence": [
+        [
+          "S030",
+          "P"
+        ],
+        [
+          "S021",
+          "P"
+        ],
+        [
+          "S030",
+          "D"
+        ],
+        [
+          "S021",
+          "D"
+        ]
+      ],
+      "departure": 6.5,
+      "return_time": 17.25,
+      "miles": 345.0,
+      "drive_hours": 7.25,
+      "duty_hours": 10.75,
+      "linehaul": 900,
+      "stop_cost": 100,
+      "cost": 1000,
+      "actions": [
+        {
+          "kind": "drive",
+          "origin": "D01",
+          "destination": "F01",
+          "start": 6.5,
+          "end": 7.5
+        },
+        {
+          "kind": "P",
+          "shipment": "S030",
+          "location": "F01",
+          "start": 7.5,
+          "end": 8.0
+        },
+        {
+          "kind": "drive",
+          "origin": "F01",
+          "destination": "F01",
+          "start": 8.0,
+          "end": 8.0
+        },
+        {
+          "kind": "P",
+          "shipment": "S021",
+          "location": "F01",
+          "start": 8.0,
+          "end": 8.5
+        },
+        {
+          "kind": "drive",
+          "origin": "F01",
+          "destination": "F03",
+          "start": 8.5,
+          "end": 10.5
+        },
+        {
+          "kind": "wait",
+          "location": "F03",
+          "start": 10.5,
+          "end": 12.0
+        },
+        {
+          "kind": "D",
+          "shipment": "S030",
+          "location": "F03",
+          "start": 12.0,
+          "end": 12.5
+        },
+        {
+          "kind": "drive",
+          "origin": "F03",
+          "destination": "F05",
+          "start": 12.5,
+          "end": 14.25
+        },
+        {
+          "kind": "D",
+          "shipment": "S021",
+          "location": "F05",
+          "start": 14.25,
+          "end": 14.75
+        },
+        {
+          "kind": "drive",
+          "origin": "F05",
+          "destination": "D01",
+          "start": 14.75,
+          "end": 17.25
+        }
+      ]
+    },
+    {
+      "tractor": "T03",
+      "day": 2,
+      "shipments": [
+        "S026",
+        "S027"
+      ],
+      "sequence": [
+        [
+          "S027",
+          "P"
+        ],
+        [
+          "S026",
+          "P"
+        ],
+        [
+          "S027",
+          "D"
+        ],
+        [
+          "S026",
+          "D"
+        ]
+      ],
+      "departure": 7.5,
+      "return_time": 17.25,
+      "miles": 296.0,
+      "drive_hours": 6.5,
+      "duty_hours": 9.75,
+      "linehaul": 900,
+      "stop_cost": 100,
+      "cost": 1000,
+      "actions": [
+        {
+          "kind": "drive",
+          "origin": "D01",
+          "destination": "F08",
+          "start": 7.5,
+          "end": 8.5
+        },
+        {
+          "kind": "P",
+          "shipment": "S027",
+          "location": "F08",
+          "start": 8.5,
+          "end": 9.0
+        },
+        {
+          "kind": "drive",
+          "origin": "F08",
+          "destination": "F01",
+          "start": 9.0,
+          "end": 10.0
+        },
+        {
+          "kind": "P",
+          "shipment": "S026",
+          "location": "F01",
+          "start": 10.0,
+          "end": 10.5
+        },
+        {
+          "kind": "drive",
+          "origin": "F01",
+          "destination": "F11",
+          "start": 10.5,
+          "end": 11.25
+        },
+        {
+          "kind": "wait",
+          "location": "F11",
+          "start": 11.25,
+          "end": 12.5
+        },
+        {
+          "kind": "D",
+          "shipment": "S027",
+          "location": "F11",
+          "start": 12.5,
+          "end": 13.0
+        },
+        {
+          "kind": "drive",
+          "origin": "F11",
+          "destination": "F05",
+          "start": 13.0,
+          "end": 14.25
+        },
+        {
+          "kind": "D",
+          "shipment": "S026",
+          "location": "F05",
+          "start": 14.25,
+          "end": 14.75
+        },
+        {
+          "kind": "drive",
+          "origin": "F05",
+          "destination": "D01",
+          "start": 14.75,
+          "end": 17.25
+        }
+      ]
+    },
+    {
+      "tractor": "T02",
+      "day": 2,
+      "shipments": [
+        "S033",
+        "S040"
+      ],
+      "sequence": [
+        [
+          "S033",
+          "P"
+        ],
+        [
+          "S040",
+          "P"
+        ],
+        [
+          "S040",
+          "D"
+        ],
+        [
+          "S033",
+          "D"
+        ]
+      ],
+      "departure": 6,
+      "return_time": 17.25,
+      "miles": 377.0,
+      "drive_hours": 7.75,
+      "duty_hours": 11.25,
+      "linehaul": 900,
+      "stop_cost": 100,
+      "cost": 1000,
+      "actions": [
+        {
+          "kind": "drive",
+          "origin": "D01",
+          "destination": "F03",
+          "start": 6,
+          "end": 8.0
+        },
+        {
+          "kind": "P",
+          "shipment": "S033",
+          "location": "F03",
+          "start": 8.0,
+          "end": 8.5
+        },
+        {
+          "kind": "drive",
+          "origin": "F03",
+          "destination": "F04",
+          "start": 8.5,
+          "end": 9.5
+        },
+        {
+          "kind": "P",
+          "shipment": "S040",
+          "location": "F04",
+          "start": 9.5,
+          "end": 10.0
+        },
+        {
+          "kind": "drive",
+          "origin": "F04",
+          "destination": "F03",
+          "start": 10.0,
+          "end": 11.0
+        },
+        {
+          "kind": "wait",
+          "location": "F03",
+          "start": 11.0,
+          "end": 12.5
+        },
+        {
+          "kind": "D",
+          "shipment": "S040",
+          "location": "F03",
+          "start": 12.5,
+          "end": 13.0
+        },
+        {
+          "kind": "drive",
+          "origin": "F03",
+          "destination": "F11",
+          "start": 13.0,
+          "end": 15.25
+        },
+        {
+          "kind": "D",
+          "shipment": "S033",
+          "location": "F11",
+          "start": 15.25,
+          "end": 15.75
+        },
+        {
+          "kind": "drive",
+          "origin": "F11",
+          "destination": "D01",
+          "start": 15.75,
+          "end": 17.25
+        }
+      ]
+    },
+    {
+      "tractor": "T04",
+      "day": 2,
+      "shipments": [
+        "S024",
+        "S031",
+        "S038"
+      ],
+      "sequence": [
+        [
+          "S031",
+          "P"
+        ],
+        [
+          "S024",
+          "P"
+        ],
+        [
+          "S038",
+          "P"
+        ],
+        [
+          "S031",
+          "D"
+        ],
+        [
+          "S038",
+          "D"
+        ],
+        [
+          "S024",
+          "D"
+        ]
+      ],
+      "departure": 6.5,
+      "return_time": 17.5,
+      "miles": 340.0,
+      "drive_hours": 7.25,
+      "duty_hours": 11.0,
+      "linehaul": 900,
+      "stop_cost": 200,
+      "cost": 1100,
+      "actions": [
+        {
+          "kind": "drive",
+          "origin": "D01",
+          "destination": "F03",
+          "start": 6.5,
+          "end": 8.5
+        },
+        {
+          "kind": "P",
+          "shipment": "S031",
+          "location": "F03",
+          "start": 8.5,
+          "end": 9.0
+        },
+        {
+          "kind": "drive",
+          "origin": "F03",
+          "destination": "F03",
+          "start": 9.0,
+          "end": 9.0
+        },
+        {
+          "kind": "P",
+          "shipment": "S024",
+          "location": "F03",
+          "start": 9.0,
+          "end": 9.5
+        },
+        {
+          "kind": "drive",
+          "origin": "F03",
+          "destination": "F09",
+          "start": 9.5,
+          "end": 11.75
+        },
+        {
+          "kind": "P",
+          "shipment": "S038",
+          "location": "F09",
+          "start": 11.75,
+          "end": 12.25
+        },
+        {
+          "kind": "drive",
+          "origin": "F09",
+          "destination": "F09",
+          "start": 12.25,
+          "end": 12.25
+        },
+        {
+          "kind": "wait",
+          "location": "F09",
+          "start": 12.25,
+          "end": 13.0
+        },
+        {
+          "kind": "D",
+          "shipment": "S031",
+          "location": "F09",
+          "start": 13.0,
+          "end": 13.5
+        },
+        {
+          "kind": "drive",
+          "origin": "F09",
+          "destination": "F11",
+          "start": 13.5,
+          "end": 14.75
+        },
+        {
+          "kind": "D",
+          "shipment": "S038",
+          "location": "F11",
+          "start": 14.75,
+          "end": 15.25
+        },
+        {
+          "kind": "drive",
+          "origin": "F11",
+          "destination": "F01",
+          "start": 15.25,
+          "end": 16.0
+        },
+        {
+          "kind": "D",
+          "shipment": "S024",
+          "location": "F01",
+          "start": 16.0,
+          "end": 16.5
+        },
+        {
+          "kind": "drive",
+          "origin": "F01",
+          "destination": "D01",
+          "start": 16.5,
+          "end": 17.5
+        }
+      ]
+    },
+    {
+      "tractor": "T06",
+      "day": 2,
+      "shipments": [
+        "S023",
+        "S035"
+      ],
+      "sequence": [
+        [
+          "S035",
+          "P"
+        ],
+        [
+          "S023",
+          "P"
+        ],
+        [
+          "S023",
+          "D"
+        ],
+        [
+          "S035",
+          "D"
+        ]
+      ],
+      "departure": 6,
+      "return_time": 15.75,
+      "miles": 358.0,
+      "drive_hours": 7.75,
+      "duty_hours": 9.75,
+      "linehaul": 900,
+      "stop_cost": 100,
+      "cost": 1000,
+      "actions": [
+        {
+          "kind": "drive",
+          "origin": "D02",
+          "destination": "F02",
+          "start": 6,
+          "end": 9.25
+        },
+        {
+          "kind": "P",
+          "shipment": "S035",
+          "location": "F02",
+          "start": 9.25,
+          "end": 9.75
+        },
+        {
+          "kind": "drive",
+          "origin": "F02",
+          "destination": "F02",
+          "start": 9.75,
+          "end": 9.75
+        },
+        {
+          "kind": "P",
+          "shipment": "S023",
+          "location": "F02",
+          "start": 9.75,
+          "end": 10.25
+        },
+        {
+          "kind": "drive",
+          "origin": "F02",
+          "destination": "F06",
+          "start": 10.25,
+          "end": 12.0
+        },
+        {
+          "kind": "D",
+          "shipment": "S023",
+          "location": "F06",
+          "start": 12.0,
+          "end": 12.5
+        },
+        {
+          "kind": "drive",
+          "origin": "F06",
+          "destination": "F10",
+          "start": 12.5,
+          "end": 14.5
+        },
+        {
+          "kind": "D",
+          "shipment": "S035",
+          "location": "F10",
+          "start": 14.5,
+          "end": 15.0
+        },
+        {
+          "kind": "drive",
+          "origin": "F10",
+          "destination": "D02",
+          "start": 15.0,
+          "end": 15.75
+        }
+      ]
+    },
+    {
+      "tractor": "T07",
+      "day": 2,
+      "shipments": [
+        "S028",
+        "S029"
+      ],
+      "sequence": [
+        [
+          "S029",
+          "P"
+        ],
+        [
+          "S028",
+          "P"
+        ],
+        [
+          "S029",
+          "D"
+        ],
+        [
+          "S028",
+          "D"
+        ]
+      ],
+      "departure": 6.75,
+      "return_time": 17.75,
+      "miles": 254.0,
+      "drive_hours": 5.5,
+      "duty_hours": 11.0,
+      "linehaul": 900,
+      "stop_cost": 100,
+      "cost": 1000,
+      "actions": [
+        {
+          "kind": "drive",
+          "origin": "D02",
+          "destination": "F10",
+          "start": 6.75,
+          "end": 7.5
+        },
+        {
+          "kind": "P",
+          "shipment": "S029",
+          "location": "F10",
+          "start": 7.5,
+          "end": 8.0
+        },
+        {
+          "kind": "drive",
+          "origin": "F10",
+          "destination": "F10",
+          "start": 8.0,
+          "end": 8.0
+        },
+        {
+          "kind": "wait",
+          "location": "F10",
+          "start": 8.0,
+          "end": 8.5
+        },
+        {
+          "kind": "P",
+          "shipment": "S028",
+          "location": "F10",
+          "start": 8.5,
+          "end": 9.0
+        },
+        {
+          "kind": "drive",
+          "origin": "F10",
+          "destination": "F12",
+          "start": 9.0,
+          "end": 10.0
+        },
+        {
+          "kind": "wait",
+          "location": "F12",
+          "start": 10.0,
+          "end": 13.0
+        },
+        {
+          "kind": "D",
+          "shipment": "S029",
+          "location": "F12",
+          "start": 13.0,
+          "end": 13.5
+        },
+        {
+          "kind": "drive",
+          "origin": "F12",
+          "destination": "F06",
+          "start": 13.5,
+          "end": 15.25
+        },
+        {
+          "kind": "D",
+          "shipment": "S028",
+          "location": "F06",
+          "start": 15.25,
+          "end": 15.75
+        },
+        {
+          "kind": "drive",
+          "origin": "F06",
+          "destination": "D02",
+          "start": 15.75,
+          "end": 17.75
+        }
+      ]
+    },
+    {
+      "tractor": "T05",
+      "day": 2,
+      "shipments": [
+        "S032",
+        "S039"
+      ],
+      "sequence": [
+        [
+          "S039",
+          "P"
+        ],
+        [
+          "S032",
+          "P"
+        ],
+        [
+          "S039",
+          "D"
+        ],
+        [
+          "S032",
+          "D"
+        ]
+      ],
+      "departure": 6,
+      "return_time": 16.0,
+      "miles": 294.0,
+      "drive_hours": 6.25,
+      "duty_hours": 10.0,
+      "linehaul": 900,
+      "stop_cost": 100,
+      "cost": 1000,
+      "actions": [
+        {
+          "kind": "drive",
+          "origin": "D02",
+          "destination": "F04",
+          "start": 6,
+          "end": 7.5
+        },
+        {
+          "kind": "P",
+          "shipment": "S039",
+          "location": "F04",
+          "start": 7.5,
+          "end": 8.0
+        },
+        {
+          "kind": "drive",
+          "origin": "F04",
+          "destination": "F11",
+          "start": 8.0,
+          "end": 9.75
+        },
+        {
+          "kind": "P",
+          "shipment": "S032",
+          "location": "F11",
+          "start": 9.75,
+          "end": 10.25
+        },
+        {
+          "kind": "drive",
+          "origin": "F11",
+          "destination": "F11",
+          "start": 10.25,
+          "end": 10.25
+        },
+        {
+          "kind": "wait",
+          "location": "F11",
+          "start": 10.25,
+          "end": 12.0
+        },
+        {
+          "kind": "D",
+          "shipment": "S039",
+          "location": "F11",
+          "start": 12.0,
+          "end": 12.5
+        },
+        {
+          "kind": "drive",
+          "origin": "F11",
+          "destination": "F07",
+          "start": 12.5,
+          "end": 14.75
+        },
+        {
+          "kind": "D",
+          "shipment": "S032",
+          "location": "F07",
+          "start": 14.75,
+          "end": 15.25
+        },
+        {
+          "kind": "drive",
+          "origin": "F07",
+          "destination": "D02",
+          "start": 15.25,
+          "end": 16.0
+        }
+      ]
+    },
+    {
+      "tractor": "T08",
+      "day": 2,
+      "shipments": [
+        "S034",
+        "S036"
+      ],
+      "sequence": [
+        [
+          "S036",
+          "P"
+        ],
+        [
+          "S034",
+          "P"
+        ],
+        [
+          "S034",
+          "D"
+        ],
+        [
+          "S036",
+          "D"
+        ]
+      ],
+      "departure": 6,
+      "return_time": 16.5,
+      "miles": 344.0,
+      "drive_hours": 7.5,
+      "duty_hours": 10.5,
+      "linehaul": 900,
+      "stop_cost": 100,
+      "cost": 1000,
+      "actions": [
+        {
+          "kind": "drive",
+          "origin": "D02",
+          "destination": "F12",
+          "start": 6,
+          "end": 7.75
+        },
+        {
+          "kind": "P",
+          "shipment": "S036",
+          "location": "F12",
+          "start": 7.75,
+          "end": 8.25
+        },
+        {
+          "kind": "drive",
+          "origin": "F12",
+          "destination": "F11",
+          "start": 8.25,
+          "end": 10.5
+        },
+        {
+          "kind": "P",
+          "shipment": "S034",
+          "location": "F11",
+          "start": 10.5,
+          "end": 11.0
+        },
+        {
+          "kind": "drive",
+          "origin": "F11",
+          "destination": "F06",
+          "start": 11.0,
+          "end": 12.0
+        },
+        {
+          "kind": "wait",
+          "location": "F06",
+          "start": 12.0,
+          "end": 13.0
+        },
+        {
+          "kind": "D",
+          "shipment": "S034",
+          "location": "F06",
+          "start": 13.0,
+          "end": 13.5
+        },
+        {
+          "kind": "drive",
+          "origin": "F06",
+          "destination": "F04",
+          "start": 13.5,
+          "end": 14.5
+        },
+        {
+          "kind": "D",
+          "shipment": "S036",
+          "location": "F04",
+          "start": 14.5,
+          "end": 15.0
+        },
+        {
+          "kind": "drive",
+          "origin": "F04",
+          "destination": "D02",
+          "start": 15.0,
+          "end": 16.5
+        }
+      ]
+    },
+    {
+      "tractor": "T02",
+      "day": 3,
+      "shipments": [
+        "S050",
+        "S053"
+      ],
+      "sequence": [
+        [
+          "S053",
+          "P"
+        ],
+        [
+          "S050",
+          "P"
+        ],
+        [
+          "S053",
+          "D"
+        ],
+        [
+          "S050",
+          "D"
+        ]
+      ],
+      "departure": 6,
+      "return_time": 14.75,
+      "miles": 325.0,
+      "drive_hours": 6.75,
+      "duty_hours": 8.75,
+      "linehaul": 900,
+      "stop_cost": 100,
+      "cost": 1000,
+      "actions": [
+        {
+          "kind": "drive",
+          "origin": "D01",
+          "destination": "F04",
+          "start": 6,
+          "end": 9.25
+        },
+        {
+          "kind": "P",
+          "shipment": "S053",
+          "location": "F04",
+          "start": 9.25,
+          "end": 9.75
+        },
+        {
+          "kind": "drive",
+          "origin": "F04",
+          "destination": "F03",
+          "start": 9.75,
+          "end": 10.75
+        },
+        {
+          "kind": "P",
+          "shipment": "S050",
+          "location": "F03",
+          "start": 10.75,
+          "end": 11.25
+        },
+        {
+          "kind": "drive",
+          "origin": "F03",
+          "destination": "F08",
+          "start": 11.25,
+          "end": 12.75
+        },
+        {
+          "kind": "D",
+          "shipment": "S053",
+          "location": "F08",
+          "start": 12.75,
+          "end": 13.25
+        },
+        {
+          "kind": "drive",
+          "origin": "F08",
+          "destination": "F08",
+          "start": 13.25,
+          "end": 13.25
+        },
+        {
+          "kind": "D",
+          "shipment": "S050",
+          "location": "F08",
+          "start": 13.25,
+          "end": 13.75
+        },
+        {
+          "kind": "drive",
+          "origin": "F08",
+          "destination": "D01",
+          "start": 13.75,
+          "end": 14.75
+        }
+      ]
+    },
+    {
+      "tractor": "T04",
+      "day": 3,
+      "shipments": [
+        "S051",
+        "S052"
+      ],
+      "sequence": [
+        [
+          "S052",
+          "P"
+        ],
+        [
+          "S051",
+          "P"
+        ],
+        [
+          "S052",
+          "D"
+        ],
+        [
+          "S051",
+          "D"
+        ]
+      ],
+      "departure": 6,
+      "return_time": 17.0,
+      "miles": 337.0,
+      "drive_hours": 7.25,
+      "duty_hours": 11.0,
+      "linehaul": 900,
+      "stop_cost": 100,
+      "cost": 1000,
+      "actions": [
+        {
+          "kind": "drive",
+          "origin": "D01",
+          "destination": "F05",
+          "start": 6,
+          "end": 8.5
+        },
+        {
+          "kind": "P",
+          "shipment": "S052",
+          "location": "F05",
+          "start": 8.5,
+          "end": 9.0
+        },
+        {
+          "kind": "drive",
+          "origin": "F05",
+          "destination": "F03",
+          "start": 9.0,
+          "end": 10.75
+        },
+        {
+          "kind": "P",
+          "shipment": "S051",
+          "location": "F03",
+          "start": 10.75,
+          "end": 11.25
+        },
+        {
+          "kind": "drive",
+          "origin": "F03",
+          "destination": "F03",
+          "start": 11.25,
+          "end": 11.25
+        },
+        {
+          "kind": "wait",
+          "location": "F03",
+          "start": 11.25,
+          "end": 13.0
+        },
+        {
+          "kind": "D",
+          "shipment": "S052",
+          "location": "F03",
+          "start": 13.0,
+          "end": 13.5
+        },
+        {
+          "kind": "drive",
+          "origin": "F03",
+          "destination": "F02",
+          "start": 13.5,
+          "end": 15.0
+        },
+        {
+          "kind": "D",
+          "shipment": "S051",
+          "location": "F02",
+          "start": 15.0,
+          "end": 15.5
+        },
+        {
+          "kind": "drive",
+          "origin": "F02",
+          "destination": "D01",
+          "start": 15.5,
+          "end": 17.0
+        }
+      ]
+    },
+    {
+      "tractor": "T03",
+      "day": 3,
+      "shipments": [
+        "S055",
+        "S060"
+      ],
+      "sequence": [
+        [
+          "S055",
+          "P"
+        ],
+        [
+          "S060",
+          "P"
+        ],
+        [
+          "S055",
+          "D"
+        ],
+        [
+          "S060",
+          "D"
+        ]
+      ],
+      "departure": 6,
+      "return_time": 17.5,
+      "miles": 375.0,
+      "drive_hours": 7.75,
+      "duty_hours": 11.5,
+      "linehaul": 900,
+      "stop_cost": 100,
+      "cost": 1000,
+      "actions": [
+        {
+          "kind": "drive",
+          "origin": "D01",
+          "destination": "F06",
+          "start": 6,
+          "end": 8.5
+        },
+        {
+          "kind": "P",
+          "shipment": "S055",
+          "location": "F06",
+          "start": 8.5,
+          "end": 9.0
+        },
+        {
+          "kind": "drive",
+          "origin": "F06",
+          "destination": "F11",
+          "start": 9.0,
+          "end": 10.0
+        },
+        {
+          "kind": "P",
+          "shipment": "S060",
+          "location": "F11",
+          "start": 10.0,
+          "end": 10.5
+        },
+        {
+          "kind": "drive",
+          "origin": "F11",
+          "destination": "F02",
+          "start": 10.5,
+          "end": 11.25
+        },
+        {
+          "kind": "wait",
+          "location": "F02",
+          "start": 11.25,
+          "end": 13.0
+        },
+        {
+          "kind": "D",
+          "shipment": "S055",
+          "location": "F02",
+          "start": 13.0,
+          "end": 13.5
+        },
+        {
+          "kind": "drive",
+          "origin": "F02",
+          "destination": "F03",
+          "start": 13.5,
+          "end": 15.0
+        },
+        {
+          "kind": "D",
+          "shipment": "S060",
+          "location": "F03",
+          "start": 15.0,
+          "end": 15.5
+        },
+        {
+          "kind": "drive",
+          "origin": "F03",
+          "destination": "D01",
+          "start": 15.5,
+          "end": 17.5
+        }
+      ]
+    },
+    {
+      "tractor": "T01",
+      "day": 3,
+      "shipments": [
+        "S054",
+        "S057",
+        "S059"
+      ],
+      "sequence": [
+        [
+          "S057",
+          "P"
+        ],
+        [
+          "S054",
+          "P"
+        ],
+        [
+          "S059",
+          "P"
+        ],
+        [
+          "S059",
+          "D"
+        ],
+        [
+          "S054",
+          "D"
+        ],
+        [
+          "S057",
+          "D"
+        ]
+      ],
+      "departure": 6,
+      "return_time": 17.0,
+      "miles": 374.0,
+      "drive_hours": 8.0,
+      "duty_hours": 11.0,
+      "linehaul": 900,
+      "stop_cost": 200,
+      "cost": 1100,
+      "actions": [
+        {
+          "kind": "drive",
+          "origin": "D01",
+          "destination": "F02",
+          "start": 6,
+          "end": 7.5
+        },
+        {
+          "kind": "P",
+          "shipment": "S057",
+          "location": "F02",
+          "start": 7.5,
+          "end": 8.0
+        },
+        {
+          "kind": "drive",
+          "origin": "F02",
+          "destination": "F03",
+          "start": 8.0,
+          "end": 9.5
+        },
+        {
+          "kind": "P",
+          "shipment": "S054",
+          "location": "F03",
+          "start": 9.5,
+          "end": 10.0
+        },
+        {
+          "kind": "drive",
+          "origin": "F03",
+          "destination": "F04",
+          "start": 10.0,
+          "end": 11.0
+        },
+        {
+          "kind": "P",
+          "shipment": "S059",
+          "location": "F04",
+          "start": 11.0,
+          "end": 11.5
+        },
+        {
+          "kind": "drive",
+          "origin": "F04",
+          "destination": "F09",
+          "start": 11.5,
+          "end": 12.75
+        },
+        {
+          "kind": "D",
+          "shipment": "S059",
+          "location": "F09",
+          "start": 12.75,
+          "end": 13.25
+        },
+        {
+          "kind": "drive",
+          "origin": "F09",
+          "destination": "F09",
+          "start": 13.25,
+          "end": 13.25
+        },
+        {
+          "kind": "D",
+          "shipment": "S054",
+          "location": "F09",
+          "start": 13.25,
+          "end": 13.75
+        },
+        {
+          "kind": "drive",
+          "origin": "F09",
+          "destination": "F11",
+          "start": 13.75,
+          "end": 15.0
+        },
+        {
+          "kind": "D",
+          "shipment": "S057",
+          "location": "F11",
+          "start": 15.0,
+          "end": 15.5
+        },
+        {
+          "kind": "drive",
+          "origin": "F11",
+          "destination": "D01",
+          "start": 15.5,
+          "end": 17.0
+        }
+      ]
+    },
+    {
+      "tractor": "T06",
+      "day": 3,
+      "shipments": [
+        "S042",
+        "S048"
+      ],
+      "sequence": [
+        [
+          "S048",
+          "P"
+        ],
+        [
+          "S042",
+          "P"
+        ],
+        [
+          "S048",
+          "D"
+        ],
+        [
+          "S042",
+          "D"
+        ]
+      ],
+      "departure": 7.75,
+      "return_time": 17.25,
+      "miles": 290.0,
+      "drive_hours": 6.25,
+      "duty_hours": 9.5,
+      "linehaul": 900,
+      "stop_cost": 100,
+      "cost": 1000,
+      "actions": [
+        {
+          "kind": "drive",
+          "origin": "D02",
+          "destination": "F07",
+          "start": 7.75,
+          "end": 8.5
+        },
+        {
+          "kind": "P",
+          "shipment": "S048",
+          "location": "F07",
+          "start": 8.5,
+          "end": 9.0
+        },
+        {
+          "kind": "drive",
+          "origin": "F07",
+          "destination": "F12",
+          "start": 9.0,
+          "end": 10.75
+        },
+        {
+          "kind": "P",
+          "shipment": "S042",
+          "location": "F12",
+          "start": 10.75,
+          "end": 11.25
+        },
+        {
+          "kind": "drive",
+          "origin": "F12",
+          "destination": "F12",
+          "start": 11.25,
+          "end": 11.25
+        },
+        {
+          "kind": "wait",
+          "location": "F12",
+          "start": 11.25,
+          "end": 12.5
+        },
+        {
+          "kind": "D",
+          "shipment": "S048",
+          "location": "F12",
+          "start": 12.5,
+          "end": 13.0
+        },
+        {
+          "kind": "drive",
+          "origin": "F12",
+          "destination": "F06",
+          "start": 13.0,
+          "end": 14.75
+        },
+        {
+          "kind": "D",
+          "shipment": "S042",
+          "location": "F06",
+          "start": 14.75,
+          "end": 15.25
+        },
+        {
+          "kind": "drive",
+          "origin": "F06",
+          "destination": "D02",
+          "start": 15.25,
+          "end": 17.25
+        }
+      ]
+    },
+    {
+      "tractor": "T08",
+      "day": 3,
+      "shipments": [
+        "S043",
+        "S044"
+      ],
+      "sequence": [
+        [
+          "S043",
+          "P"
+        ],
+        [
+          "S044",
+          "P"
+        ],
+        [
+          "S044",
+          "D"
+        ],
+        [
+          "S043",
+          "D"
+        ]
+      ],
+      "departure": 6,
+      "return_time": 15.75,
+      "miles": 362.0,
+      "drive_hours": 7.75,
+      "duty_hours": 9.75,
+      "linehaul": 900,
+      "stop_cost": 100,
+      "cost": 1000,
+      "actions": [
+        {
+          "kind": "drive",
+          "origin": "D02",
+          "destination": "F04",
+          "start": 6,
+          "end": 7.5
+        },
+        {
+          "kind": "P",
+          "shipment": "S043",
+          "location": "F04",
+          "start": 7.5,
+          "end": 8.0
+        },
+        {
+          "kind": "drive",
+          "origin": "F04",
+          "destination": "F02",
+          "start": 8.0,
+          "end": 10.0
+        },
+        {
+          "kind": "P",
+          "shipment": "S044",
+          "location": "F02",
+          "start": 10.0,
+          "end": 10.5
+        },
+        {
+          "kind": "drive",
+          "origin": "F02",
+          "destination": "F12",
+          "start": 10.5,
+          "end": 13.0
+        },
+        {
+          "kind": "D",
+          "shipment": "S044",
+          "location": "F12",
+          "start": 13.0,
+          "end": 13.5
+        },
+        {
+          "kind": "drive",
+          "origin": "F12",
+          "destination": "F10",
+          "start": 13.5,
+          "end": 14.5
+        },
+        {
+          "kind": "D",
+          "shipment": "S043",
+          "location": "F10",
+          "start": 14.5,
+          "end": 15.0
+        },
+        {
+          "kind": "drive",
+          "origin": "F10",
+          "destination": "D02",
+          "start": 15.0,
+          "end": 15.75
+        }
+      ]
+    },
+    {
+      "tractor": "T07",
+      "day": 3,
+      "shipments": [
+        "S046",
+        "S049"
+      ],
+      "sequence": [
+        [
+          "S049",
+          "P"
+        ],
+        [
+          "S046",
+          "P"
+        ],
+        [
+          "S046",
+          "D"
+        ],
+        [
+          "S049",
+          "D"
+        ]
+      ],
+      "departure": 6,
+      "return_time": 16.0,
+      "miles": 362.0,
+      "drive_hours": 8.0,
+      "duty_hours": 10.0,
+      "linehaul": 900,
+      "stop_cost": 100,
+      "cost": 1000,
+      "actions": [
+        {
+          "kind": "drive",
+          "origin": "D02",
+          "destination": "F01",
+          "start": 6,
+          "end": 9.5
+        },
+        {
+          "kind": "P",
+          "shipment": "S049",
+          "location": "F01",
+          "start": 9.5,
+          "end": 10.0
+        },
+        {
+          "kind": "drive",
+          "origin": "F01",
+          "destination": "F11",
+          "start": 10.0,
+          "end": 10.75
+        },
+        {
+          "kind": "P",
+          "shipment": "S046",
+          "location": "F11",
+          "start": 10.75,
+          "end": 11.25
+        },
+        {
+          "kind": "drive",
+          "origin": "F11",
+          "destination": "F04",
+          "start": 11.25,
+          "end": 13.0
+        },
+        {
+          "kind": "D",
+          "shipment": "S046",
+          "location": "F04",
+          "start": 13.0,
+          "end": 13.5
+        },
+        {
+          "kind": "drive",
+          "origin": "F04",
+          "destination": "F10",
+          "start": 13.5,
+          "end": 14.75
+        },
+        {
+          "kind": "D",
+          "shipment": "S049",
+          "location": "F10",
+          "start": 14.75,
+          "end": 15.25
+        },
+        {
+          "kind": "drive",
+          "origin": "F10",
+          "destination": "D02",
+          "start": 15.25,
+          "end": 16.0
+        }
+      ]
+    },
+    {
+      "tractor": "T05",
+      "day": 3,
+      "shipments": [
+        "S056",
+        "S058"
+      ],
+      "sequence": [
+        [
+          "S058",
+          "P"
+        ],
+        [
+          "S056",
+          "P"
+        ],
+        [
+          "S056",
+          "D"
+        ],
+        [
+          "S058",
+          "D"
+        ]
+      ],
+      "departure": 7.5,
+      "return_time": 17.0,
+      "miles": 351.0,
+      "drive_hours": 7.5,
+      "duty_hours": 9.5,
+      "linehaul": 900,
+      "stop_cost": 100,
+      "cost": 1000,
+      "actions": [
+        {
+          "kind": "drive",
+          "origin": "D02",
+          "destination": "F04",
+          "start": 7.5,
+          "end": 9.0
+        },
+        {
+          "kind": "P",
+          "shipment": "S058",
+          "location": "F04",
+          "start": 9.0,
+          "end": 9.5
+        },
+        {
+          "kind": "drive",
+          "origin": "F04",
+          "destination": "F03",
+          "start": 9.5,
+          "end": 10.5
+        },
+        {
+          "kind": "P",
+          "shipment": "S056",
+          "location": "F03",
+          "start": 10.5,
+          "end": 11.0
+        },
+        {
+          "kind": "drive",
+          "origin": "F03",
+          "destination": "F12",
+          "start": 11.0,
+          "end": 14.25
+        },
+        {
+          "kind": "D",
+          "shipment": "S056",
+          "location": "F12",
+          "start": 14.25,
+          "end": 14.75
+        },
+        {
+          "kind": "drive",
+          "origin": "F12",
+          "destination": "F12",
+          "start": 14.75,
+          "end": 14.75
+        },
+        {
+          "kind": "D",
+          "shipment": "S058",
+          "location": "F12",
+          "start": 14.75,
+          "end": 15.25
+        },
+        {
+          "kind": "drive",
+          "origin": "F12",
+          "destination": "D02",
+          "start": 15.25,
+          "end": 17.0
+        }
+      ]
+    }
+  ],
+  "ltl_shipments": [
+    "S007",
+    "S008",
+    "S022",
+    "S025",
+    "S037",
+    "S041",
+    "S045",
+    "S047"
+  ]
+}

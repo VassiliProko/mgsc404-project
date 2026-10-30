@@ -1,6 +1,6 @@
 # MGSC 404 Group Project
 
-Starter environment for the shipment consolidation group project using Python, Jupyter, and Gurobi.
+Shipment consolidation using Python route generation, Gurobi route selection, and an independent plan checker.
 
 ## Setup
 
@@ -10,20 +10,26 @@ Use Python 3. From this folder:
 python3 -m venv .venv
 source .venv/bin/activate
 python -m pip install -r requirements.txt
-python -m jupyter lab project_starter.ipynb
+python -m jupyter lab optimization-vassili.ipynb
 ```
 
 On Windows, activate the environment with `.venv\Scripts\activate`.
 
-Select the environment's Python kernel and run the notebook from top to bottom. The Gurobi setup check should return an objective of `1.0`.
+Select the environment's Python kernel and run the notebook from top to bottom.
 
 Gurobi may provide a restricted license for small models. For the full project, configure an appropriate Gurobi academic license separately. Do not commit license files or credentials.
 
 ## Files
 
-- `project_starter.ipynb`: imports, Gurobi setup check, Excel preview, and comments for later model development.
+- `optimization-vassili.ipynb`: complete chronological solution, with short explanations and saved results.
 - `project1_simplified.xlsx`: simplified project dataset.
 - `project1_main.xlsx`: main project dataset.
 - `requirements.txt`: Python dependencies.
 
-The setup check and coding conventions follow the MGSC 404 Assignment 1 and Assignment 2 notebooks. Those assignments are not included here. The notebook is an environment starter; the project optimization model is still to be implemented.
+The notebook defaults to the simplified workbook. Change `DATA_FILE` in section 2 to `project1_main.xlsx` and restart/run all cells to solve the main workbook, including LIFO, refrigeration, compatibility, and driver-break rules.
+
+Sections cover data loading, the all-LTL baseline, route scheduling, candidate generation, the binary Gurobi model, independent checks, and final savings. The model uses `addVars`, `quicksum`, `addConstr`, and `optimize`, as in class.
+
+`PARTNER_LIMIT` and `EXPAND_LIMIT` in section 5 control the search breadth. The solver finds the best plan within the generated candidates when its gap reaches zero; this does not prove a global optimum across all possible routes.
+
+Results are written under `results-vassili/<dataset>/`: `truck_routes.csv`, `schedule.csv`, `ltl_shipments.csv`, `plan.json`, and `summary.json`. Schedule hours are local to the stated day (7.5 means 07:30); the checker includes travel, handling, waiting, breaks, and overnight rest.
