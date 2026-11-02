@@ -161,7 +161,7 @@ def add_day(m, d):
     def loc(u, k):
         return TRACTOR[k]["home_depot_id"] if u in (START, END) else location[u]
 
-    # ---- which legs are allowed ----
+    # which legs are allowed 
     # from the depot (START) the truck can only go to a pickup since it's empty,
     # and it can only go back to the depot (END) after a delivery.
     # we also skip legs that are impossible time-wise (finishing at u and
@@ -220,7 +220,7 @@ def add_day(m, d):
             out_legs[u, k].append(v)
             in_legs[v, k].append(u)
 
-    # ---- Step 3: constraints ----
+    # Step 3: constraints
     n_ship = {k: gp.quicksum(on_tour[i, k] for i in I) for k in K}
 
     # each shipment is served exactly once (truck or LTL)
@@ -331,7 +331,7 @@ def add_day(m, d):
                             >= gp.quicksum(weight[i] * on_tour[i, k2] for i in I),
                             name=f"SB_key[{k1},{k2},{d}]")
 
-    # ---- Step 2: objective (cost for this day) ----
+    #  Step 2: objective (cost for this day) 
     day_cost = (gp.quicksum(linehaul_charge[k] + stop_charge[k] for k in K)
                 + gp.quicksum(ltl_cost[i] * use_ltl[i] for i in I))
     V["LEGS"], V["STOPS"], V["loc"] = LEGS, STOPS, loc
