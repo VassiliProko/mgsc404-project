@@ -1,0 +1,32 @@
+{
+  "dataset": "data/project1_main.xlsx",
+  "dataset_sha256": "df76d27a8d77e3ebdfd949780bf324e7153063b5e59b79fa37d8b13af1335d4c",
+  "vassili": {
+    "linehaul": 163102.05,
+    "stop_cost": 11290,
+    "ltl_cost": 1001418.85,
+    "total_cost": 1175810.9,
+    "baseline": 1557535.8499999999,
+    "miles": 66193.0,
+    "weight_utilization": 0.16223918560419398,
+    "feet_utilization": 0.20769269670442456,
+    "shipments": 800,
+    "savings": 381724.94999999995,
+    "savings_pct": 24.50826091739718,
+    "candidates": 9578,
+    "generation_seconds": 1.920989208854735,
+    "solver_seconds": 0.15432000160217285,
+    "total_seconds": 4.06395920808427,
+    "selected_routes": 168,
+    "ltl_shipments": 523,
+    "solver_gap": 1.9801708221438383e-16,
+    "checker": "PASS"
+  },
+  "teammate_model_1": {
+    "status": "CANNOT_RUN_MAIN",
+    "error_type": "AssertionError",
+    "error": "This file is for side access (lifo_required = 0)",
+    "elapsed_seconds": 0.26079104095697403,
+    "changes_for_test": "Main input and isolated output paths; optional direct-model check disabled. No feasibility/model changes."
+  }
+}
