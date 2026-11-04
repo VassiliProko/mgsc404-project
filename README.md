@@ -23,7 +23,7 @@ To open the notebook: `python -m jupyter lab vassili-explorations/optimization-v
 
 ## Independent plan checker
 
-[`indepedent-full-checker.py`](indepedent-full-checker.py) independently checks
+[`checker-full.py`](checker-full.py) independently checks
 input data, routes, loading, time windows, driver rules, coverage and recalculated
 costs. It reads the original workbook and exported plan without using Gurobi or
 importing the model.
@@ -31,15 +31,16 @@ importing the model.
 From this repository, check the main plan:
 
 ```bash
-python indepedent-full-checker.py
+python checker-full.py
 ```
 
 Or check a simplified plan:
 
 ```bash
-python indepedent-full-checker.py --data data/project1_simplified.xlsx --plan output/plan_simplified.xlsx
+python checker-full.py --data data/project1_simplified.xlsx --plan output/plan_simplified.xlsx
 ```
 
 It prints `PASS` with recalculated savings, or stops at the first error with `FAIL`.
 A pass checks feasibility and costs, not optimality. The Excel files are unchanged.
-The original `simplified_checker.py` also lives in the project root.
+It builds on `checker-simplified.py`, retaining its sheet loading and coverage checks
+and completing the route audit with full-data constraints.
