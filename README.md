@@ -20,3 +20,26 @@ Install Python dependencies with `python -m pip install -r requirements.txt` and
 The notebook, checked results, comparison runs, and notebook instructions are in [`vassili-explorations/`](vassili-explorations/README.md).
 
 To open the notebook: `python -m jupyter lab vassili-explorations/optimization-vassili.ipynb`.
+
+## Independent plan checker
+
+[`indepedent-full-checker.py`](indepedent-full-checker.py) independently checks
+input data, routes, loading, time windows, driver rules, coverage and recalculated
+costs. It reads the original workbook and exported plan without using Gurobi or
+importing the model.
+
+From this repository, check the main plan:
+
+```bash
+python indepedent-full-checker.py
+```
+
+Or check a simplified plan:
+
+```bash
+python indepedent-full-checker.py --data data/project1_simplified.xlsx --plan output/plan_simplified.xlsx
+```
+
+It prints `PASS` with recalculated savings, or stops at the first error with `FAIL`.
+A pass checks feasibility and costs, not optimality. The Excel files are unchanged.
+The original `simplified_checker.py` also lives in the project root.
