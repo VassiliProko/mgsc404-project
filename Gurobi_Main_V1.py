@@ -10,7 +10,7 @@
 #        - a 30 min break before driving more than 8 h since the last break
 #        - weight, floor length and pallets after every stop (reefers are smaller)
 #        - max 8 stops (so max 4 shipments)
-#        - chilled freight only on a chilled-capable truck (reefer)
+#        - chilled freight requires a reefer; ambient freight can use either truck type
 #        - only freight with the same temperature and group on board together
 #        - last in, first out: the last shipment loaded has to come off first
 #      We also work out what each tour costs.

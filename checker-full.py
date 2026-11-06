@@ -1,11 +1,64 @@
+# independent checker for the main file
+#
 # How this checker works:
-# 1. Read the original workbook data and the exported plan separately.
-# 2. Check the input data, shipment assignments, actual routes and costs.
-# 3. Stop at the first problem, or print OK and the recalculated savings.
-# This extends checker-simplified.py with full route checks, LIFO, compatibility,
-# refrigeration, breaks and overnight rest. It does not use the optimization model.
+#   1. First we read two Excel files separately:
+#        - the original data: shipments, trucks, capacities, windows and rates
+#        - the proposed plan: truck tours, individual stops and LTL shipments
+#      We do not import the optimizer or use Gurobi. We rebuild the checks and
+#      costs from the original data rather than trusting the model's totals.
+#   2. Check that the input data makes sense before checking the plan:
+#        - required sheets and columns, numeric values and unique IDs
+#        - valid facility, depot and equipment references
+#        - positive demands and capacities, ordered windows and valid days
+#        - one travel entry per directed location pair, with correct drive time
+#        - exactly one LTL rate band per shipment (lower bound included,
+#          upper bound excluded), then base price x (1 + fuel surcharge)
+#   3. Follow each truck tour stop by stop, starting with an empty truck:
+#        - use that truck's assigned depot, equipment and capacity limits
+#        - depart from and return to its home depot within depot hours and shift
+#        - rebuild each leg's miles, driving time and arrival from the data,
+#          including the empty approach and return legs
+#        - pick up and deliver at the right facilities on the shipment's day
+#        - fit the whole handling duration inside both the shipment window
+#          and the facility's hours; check the reported waiting time too
+#        - pick up each shipment before delivering it, on the same truck
+#        - add/remove weight, floor length and pallets after every service event;
+#          check capacity and compare with the loads reported in the plan
+#        - chilled freight requires a reefer; ambient can use either truck type
+#        - freight on board together must have the same temperature and group
+#        - when LIFO is required, unload the last shipment picked up first
+#        - return empty, and check the shipment list and service-stop count
+#   4. Check the driver rules using the values in the original workbook:
+#        - no driving leg can push driving since the last break over its limit
+#        - a recorded break must fit at a visited service stop, last long enough,
+#          and overlap neither handling nor another break
+#        - waiting only counts as a break when explicitly recorded as one
+#        - a break resets driving since the last break, not total driving or duty
+#        - total driving and departure-to-return duty must fit their limits
+#        - allow enough rest between one tour's return and the next departure
+#   5. Check the assignments across the whole plan:
+#        - every shipment is served exactly once, by a truck or by LTL
+#        - each truck does at most one complete tour per day
+#        - reject unknown IDs, duplicate tours and unmatched stop/break records
+#   6. Recalculate the bill independently:
+#        - each truck tour: max(minimum linehaul, miles x equipment rate)
+#          + extra-stop fee x max(0, number of service events - 2)
+#        - LTL: use each shipment's original rate, without assigning it a truck
+#        - compare reported route and LTL costs with our recalculated costs
+#        - sum truck + LTL costs and compare with the all-LTL baseline
+#        - check matching totals in the optional plan summary, if present
+#   7. Stop at the first detected problem and print FAIL with its location.
+#      If all checks pass, print OK, recalculated total cost and savings.
+#
+# Main-data defaults: 11 h driving, 14 h duty, a 30 min break before exceeding
+# 8 h driving since the last break, 10 h rest, and at most 8 service stops.
+# These limits come from the workbook, so simplified data uses its own rules.
+# Run from the project folder: python checker-full.py
+# Use --data and --plan to choose different input and plan workbooks.
+# This checks the submitted plan's feasibility and costs. It does not search
+# for cheaper routes, check missing candidate tours or prove optimality.
 
-"""Check an exported shipment plan against the original workbook, without using the model."""
+# imports
 import argparse
 import math
 from pathlib import Path
