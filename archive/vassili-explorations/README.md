@@ -4,13 +4,13 @@ Shipment consolidation using Python route generation, Gurobi route selection, an
 
 ## Setup
 
-Use Python 3. From this folder:
+Use Python 3. From the repository root:
 
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
 python -m pip install -r requirements.txt
-python -m jupyter lab vassili-explorations/optimization-vassili.ipynb
+python -m jupyter lab archive/vassili-explorations/optimization-vassili.ipynb
 ```
 
 On Windows, activate the environment with `.venv\Scripts\activate`.
@@ -22,9 +22,9 @@ Gurobi may provide a restricted license for small models. For the full project, 
 ## Files in this exploration
 
 - `optimization-vassili.ipynb`: complete chronological solution, with short explanations and saved results.
-- `../data/project1_simplified.xlsx`: simplified project dataset.
-- `../data/project1_main.xlsx`: main project dataset.
-- `../requirements.txt`: Python dependencies.
+- `../../data/project1_simplified.xlsx`: simplified project dataset.
+- `../../data/project1_main.xlsx`: main project dataset.
+- `../../requirements.txt`: Python dependencies.
 
 The notebook defaults to the simplified workbook. Change `DATA_FILE` in section 2 to `PROJECT_DIR / "data" / "project1_main.xlsx"` and restart/run all cells to solve the main workbook, including LIFO, refrigeration, compatibility, and driver-break rules.
 
