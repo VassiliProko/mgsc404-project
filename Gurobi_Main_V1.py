@@ -45,6 +45,9 @@ import pandas as pd
 import gurobipy as gp
 from gurobipy import GRB
 
+import subprocess
+import sys
+
 # settings we can change
 FOLDER = Path(__file__).resolve().parent
 DATA_FILE = FOLDER / "data" / "project1_main.xlsx"
@@ -798,3 +801,18 @@ with pd.ExcelWriter(PLAN_FILE) as writer:
     pd.DataFrame(summary_rows, columns=["item", "value"]).to_excel(
         writer, sheet_name="summary", index=False)
 print(f"\nPlan written to {PLAN_FILE.relative_to(FOLDER)}")
+
+
+# Step 8: independently check the saved plan
+# The checker rereads the original data and exported plan.
+# If any check fails, check=True stops this program with an error.
+print("\n================ INDEPENDENT CHECKER ================", flush=True)
+subprocess.run(
+    [
+        sys.executable,
+        str(FOLDER / "checker-full.py"),
+        "--data", str(DATA_FILE),
+        "--plan", str(PLAN_FILE),
+    ],
+    check=True,
+)

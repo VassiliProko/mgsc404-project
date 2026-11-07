@@ -58,11 +58,14 @@
 # This checks the submitted plan's feasibility and costs. It does not search
 # for cheaper routes, check missing candidate tours or prove optimality.
 
-# imports
+# 0. import packages
+
 import argparse
 import math
 from pathlib import Path
 import pandas as pd
+
+# 1. import files
 
 FOLDER = Path(__file__).resolve().parent
 DATA_FILE = FOLDER / "data" / "project1_main.xlsx"
@@ -557,12 +560,24 @@ def main():
         result = check_route(data, plan)
     except (ValueError, KeyError, OSError) as exc:
         parser.exit(1, f'FAIL: {exc}\n')
-    print(f"Workbook: {len(data['shipments'])} shipments, {len(data['tractors'])} tractors")
-    print(f"Plan: {len(plan['tours'])} tours, {len(plan['stops'])} stops, {len(plan['ltl'])} LTL shipments")
-    print('Coverage, routes, driver rules and costs: OK')
-    print(f"Recalculated cost: CAD {result['objective_cad']:,.2f}")
-    print(f"Savings vs all-LTL: CAD {result['savings_cad']:,.2f} ({result['savings_pct']:.2f}%)")
-    print('This checks feasibility and costs, not optimality.')
+    print("PASS: all implemented feasibility and cost checks passed")
+    print(f"Data file: {args.data.name}")
+    print(f"Plan file: {args.plan.name}")
+    print(f"Workbook: {len(data['shipments'])} shipments, "
+          f"{len(data['tractors'])} tractors")
+    print(f"Plan: {len(plan['tours'])} tours, "
+          f"{len(plan['ltl'])} shipments sent by LTL")
+    print(f"Event records: {len(plan['stops'])} "
+          "(pickups, deliveries, depot departures/returns and breaks)")
+
+    print("\nIndependently recalculated costs:")
+    print(f"  All-LTL baseline: CAD {result['all_ltl_cad']:,.2f}")
+    print(f"  Submitted plan:   CAD {result['objective_cad']:,.2f}")
+    print(f"  Savings:          CAD {result['savings_cad']:,.2f} "
+          f"({result['savings_pct']:.2f}%)")
+
+    print("\nThis validates the submitted plan's feasibility and costs.")
+    print("It does not prove optimality or check for missing candidate routes.")
 
 
 if __name__ == '__main__':

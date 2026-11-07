@@ -8,3 +8,4 @@ venv/
 .env.*
 gurobi.lic
 *.log
+/report/
