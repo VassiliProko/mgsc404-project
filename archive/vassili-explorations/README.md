@@ -22,7 +22,7 @@ Gurobi may provide a restricted license for small models. For the full project, 
 ## Files in this exploration
 
 - `optimization-vassili.ipynb`: complete chronological solution, with short explanations and saved results.
-- `../../data/project1_simplified.xlsx`: simplified project dataset.
+- `../data/project1_simplified.xlsx`: simplified project dataset.
 - `../../data/project1_main.xlsx`: main project dataset.
 - `../../requirements.txt`: Python dependencies.
 
