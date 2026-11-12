@@ -602,6 +602,30 @@ def build_selection_model(tours):
     return model, select_tour, use_ltl
 
 
+
+def greedy_pair_savings(tours, ltl_cost):
+    """Take profitable two-shipment tours in descending savings order."""
+    pairs = []
+    for tour in tours:
+        shipments = tour["shipments"]
+        if len(shipments) != 2:
+            continue
+        savings = round(sum(ltl_cost[i] for i in shipments) - tour["cost"], 2)
+        if savings > 0:
+            pairs.append((-savings, tour["day"], shipments, tour["tractor"]))
+
+    used_shipments, used_tractor_days = set(), set()
+    total_savings = 0.0
+    for negative_savings, day, shipments, tractor in sorted(pairs):
+        slot = (tractor, day)
+        if slot in used_tractor_days or used_shipments.intersection(shipments):
+            continue
+        used_tractor_days.add(slot)
+        used_shipments.update(shipments)
+        total_savings -= negative_savings
+    return total_savings, len(used_shipments)
+
+
 model, select_tour, use_ltl = build_selection_model(tours)
 model.optimize()
 
@@ -627,16 +651,19 @@ print(f"Objective (CAD)    : {model.ObjVal:,.2f}")
 print(f"Best bound (CAD)   : {model.ObjBound:,.2f}")
 print(f"Optimality gap     : {model.MIPGap:.4%}")
 if model.Status == GRB.OPTIMAL:
-    print("Optimal over the candidate tours we generated. (we tested the shortcuts "
-          "separately and they didn't lose any feasible tour)")
+    print("Optimal over the generated candidate tours.")
 
 chosen = [tours[r] for r in range(len(tours)) if select_tour[r].X > 0.5]
 on_ltl = [i for i in SHIPMENTS if use_ltl[i].X > 0.5]
 
 all_ltl = sum(ltl_cost.values())
 savings = all_ltl - model.ObjVal
+heuristic_savings, heuristic_shared = greedy_pair_savings(tours, ltl_cost)
+heuristic_cost = all_ltl - heuristic_savings
 print("\n================ RESULTS ================")
 print(f"All-LTL baseline   : CAD {all_ltl:,.2f}")
+print(f"Greedy pairs cost  : CAD {heuristic_cost:,.2f} "
+      f"({heuristic_shared} shared shipments)")
 print(f"Optimized cost     : CAD {model.ObjVal:,.2f}")
 print(f"Savings            : CAD {savings:,.2f}  ({savings / all_ltl:.2%})")
 
@@ -673,14 +700,14 @@ if cap_w > 0:
 print(f"Total tour miles   : {total_miles:,.0f} "
       f"(of which depot approach + return: {empty_miles:,.0f})")
 
-# extra time vs driving straight there: (delivery end - pickup end) - direct drive
+# Added elapsed time relative to direct driving plus delivery handling.
 extra = []
 for t in chosen:
     end = {(s["event"], s["shipment"]): s["service_end"] for s in t["stops"]}
     for i in t["shipments"]:
         s = SHIP[i]
         direct = drive_hours(s["origin_id"], s["destination_id"])
-        extra.append(end["D", i] - end["P", i] - direct)
+        extra.append(end["D", i] - end["P", i] - direct - s["delivery_service_hours"])
 if extra:
     print(f"Extra time vs direct trip: average {sum(extra) / len(extra):.2f} h, "
           f"max {max(extra):.2f} h")
@@ -784,6 +811,8 @@ summary_rows = [
     ("best_bound_cad", round(model.ObjBound, 2)),
     ("mip_gap", model.MIPGap),
     ("all_ltl_cad", round(all_ltl, 2)),
+    ("greedy_pair_cost_cad", round(heuristic_cost, 2)),
+    ("greedy_pair_shared_shipments", heuristic_shared),
     ("savings_cad", round(savings, 2)),
     ("savings_pct", round(100 * savings / all_ltl, 2)),
     ("shipments_ltl", len(on_ltl)),

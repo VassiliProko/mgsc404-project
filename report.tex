@@ -1,0 +1,312 @@
+\documentclass[11pt,letterpaper]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{amsmath,amssymb,booktabs,tabularx,array}
+\usepackage[hidelinks]{hyperref}
+
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0.4em}
+\newcolumntype{Y}{>{\raggedright\arraybackslash}X}
+\newcommand{\code}[1]{\texttt{#1}}
+
+\begin{document}
+
+\begin{center}
+{\Large\bfseries Consolidating Partial Shipments into Truckload Tours\par}
+\vspace{5pt}
+MGSC 404 \enspace|\enspace Group 3, Project 1\\[3pt]
+{\small Sofia Avetisian, Liana Jia, Abraham Dumani Lichtinger\\
+Luca Novac, Vassili Prokopenko, Massimo Seifarth}
+\end{center}
+
+\section*{The planning objective}
+
+We minimize the cost of serving each shipment on its required day by
+dedicated truck, shared truck, or outside less-than-truckload (LTL)
+service. We assume the outside carrier has enough capacity and can
+meet the supplied windows at the workbook's rates. We develop the
+model on 60 shipments over three days with eight
+tractors at two depots, then extend it to 800 shipments over seven days
+with 24 tractors at four depots. All demand is known before planning,
+and every shipment is indivisible.
+
+\section{Simplified workbook}
+
+\subsection*{Parameters: sets, relationships and coefficients}
+
+Python constructs the scheduled tour set and fixed costs before
+Gurobi chooses which tours to run.
+
+\begin{itemize}
+\setlength{\itemsep}{2pt}
+\item \(I,K,D\) are the shipments, tractors, and planning days.
+\(R\) is the set of feasible candidate tours. Each tour fixes its
+tractor, day, stop order, and times. \(R_{kd}\) contains the tours for
+tractor \(k\) on day \(d\).
+\item \(a_{ir}\) equals 1 if candidate \(r\) serves shipment \(i\)
+and 0 otherwise. This is fixed once a tour is generated.
+\item \(m_{ab},\tau_{ab}\) are miles and driving hours from location \(a\)
+to \(b\). Service event \(j\) has handling time \(s_j\) and effective
+window \([L_j,U_j]\). For tractor \(k\) on day \(d\),
+\([H^-_{kd},H^+_{kd}]\) bounds departure from and return to its depot.
+\item \(q_i^u,Q_k^u\) are shipment demand and trailer capacity for
+resource \(u\), measured in pounds, feet of floor length, or pallets.
+\item \(M_r\) is total tour mileage including depot legs, and \(N_r\)
+counts pickups and deliveries. The equipment's minimum linehaul charge,
+mileage rate, and extra-stop fee are \(\mu_r,\rho_r,f_r\).
+\item \(b_i\) is the matched LTL base charge by freight class, weight,
+and direct-mileage band. \(\phi_i\) is the fuel surcharge rate.
+\end{itemize}
+
+The resulting cost coefficients, in CAD, are
+\[
+c_r=\max\{\mu_r,\rho_r M_r\}+f_r\max\{0,N_r-2\},
+\qquad \ell_i=b_i(1+\phi_i).
+\]
+
+\subsection*{Decision variables}
+
+\begin{itemize}
+\setlength{\itemsep}{2pt}
+\item \textbf{Tour selection.} \(x_r=1\) if candidate tour \(r\)
+is selected and 0 otherwise.
+\item \textbf{Outsourcing.} \(z_i=1\) if shipment \(i\) is sent by LTL
+and 0 otherwise.
+\end{itemize}
+
+\newpage
+\subsection*{Mathematical model}
+
+\begin{align}
+\min\quad & \sum_{r\in R} c_r x_r+\sum_{i\in I}\ell_i z_i
+   \tag{0}\label{eq:objective}\\
+\text{subject to}\quad
+& \sum_{r\in R}a_{ir}x_r+z_i=1 && \forall i\in I
+   \tag{1}\label{eq:coverage}\\
+& \sum_{r\in R_{kd}}x_r\le 1 && \forall k\in K,\ d\in D
+   \tag{2}\label{eq:tractor}\\
+& x_r,z_i\in\{0,1\} && \forall r\in R,\ i\in I.
+   \tag{3}\label{eq:binary}
+\end{align}
+
+\subsection*{What each equation captures}
+
+\begin{itemize}
+\setlength{\itemsep}{1pt}
+\item \eqref{eq:objective} \textbf{Total cost.} Add selected tour
+charges and the LTL bill. Setting \(z_i=1\) for every shipment and
+selecting no tours gives the all-LTL benchmark.
+\item \eqref{eq:coverage} \textbf{Shipment coverage.} Each shipment
+goes on exactly one selected tour or to LTL.
+\item \eqref{eq:tractor} \textbf{Tractor availability.} Each tractor
+can run at most one tour per day.
+\item \eqref{eq:binary} \textbf{Domains.} Both choices are binary.
+\end{itemize}
+
+\subsection*{What makes a simplified tour feasible}
+
+\textbf{Route and capacity.} A tour leaves and returns empty to its
+home depot. Each shipment is picked up before delivery on the same
+tractor and stated day. Side access allows delivery of any shipment
+on board. A tour has at most six service events. After each event the
+onboard load must satisfy
+\[
+0\le \sum_{i\text{ on board}}q_i^u\le Q_k^u
+\qquad \text{for weight, floor length, and pallets}.
+\]
+The dry trailer holds 45,000 lb, 53 ft, and 26 pallets.
+
+\textbf{Timing and driver hours.} Let \(A_j,T_j,E_j\) be arrival,
+handling start, and departure at stop \(j\). The effective window
+intersects the shipment window and facility hours. With \(E_0\) the
+depot departure and \(A_{\rm home}\) the depot return,
+\[
+\begin{aligned}
+A_j &= E_{j-1}+\tau_{j-1,j}, &
+T_j &\ge \max\{A_j,L_j\},\\
+T_j+s_j &\le U_j, &
+E_j &\ge T_j+s_j .
+\end{aligned}
+\]
+The tour fits depot hours and the shift when \(E_0\ge H^-_{kd}\)
+and \(A_{\rm home}\le H^+_{kd}\). Driving, including both depot legs,
+is capped at 8 hours. Duty \(A_{\rm home}-E_0\) includes driving,
+handling, and waiting and is capped at 12 hours. Fixed shifts
+provide at least 12 hours of rest.
+
+\newpage
+\section{Implementation}
+
+\subsection*{Generate tours on the simplified workbook}
+
+For each day, group tractors with the same depot, equipment, and shift.
+Try groups of up to three shipments and all pickup-before-delivery
+orders. Simulate each schedule and shift departure later when window
+slack can absorb waiting. Keep the cheapest feasible schedule per group
+and tractor, breaking ties by shorter duty. The retained schedules
+supply \(R\), \(a_{ir}\), and \(c_r\) to Gurobi.
+
+\subsection*{Extend the tour rules for the main workbook}
+
+The same selection equations apply to the main workbook.
+
+\textbf{Equipment and loading.} Chilled freight requires a reefer.
+Shipments carried together must share temperature and compatibility
+group. The dry trailer holds 45,000 lb, 53 ft, and 26 pallets, while
+the reefer holds 42,000 lb, 48 ft, and 24 pallets. Under last-in,
+first-out unloading, the most recently picked-up shipment still on
+board must be delivered first. The limit rises to eight service
+events, or four shipments.
+
+\textbf{Time windows and driver limits.} The same time-window formulas
+use each location's opening hours. Driving is capped at 11 hours
+and duty at 14 hours, with at least 10 hours of rest between days.
+Before a leg would take the driver past eight driving hours since
+departure or the last break, the driver must take a 30-minute break
+at a service stop. The break fits around handling and counts toward
+duty. Driving back to the depot counts toward both driving limits.
+
+\textbf{Candidate search.} Python extends a group only when every
+immediate subset yielded a feasible tour for that tractor profile.
+It screens stop orders for capacity, loading order, and early window
+violations. If the initial schedule fails on a route that needs a
+break, it tries alternative break placements and departures on the
+15-minute grid. The run allows up to four shipments per tour with
+no additional cap on the number of groups tried. The solver gap
+applies to the candidates generated by this search.
+
+\subsection*{Solve, export and check}
+
+From the project folder, run \code{python Gurobi\_Simplified\_v4.py}
+or \code{python Gurobi\_Main\_V1.py}. Each script reads its workbook,
+exports the selected tours, stop times, loads, and LTL assignments,
+then calls the checker. Both runs used Gurobi 13.0.3, seed 0, and a
+target gap of 0\%. Time limits were 600 and 1,800 seconds.
+
+The checker reads the workbook and exported plan independently of
+Gurobi. It rebuilds the stop sequence, travel, waiting, loads, return
+to depot, and costs, then checks coverage and driver limits. Both
+exported plans passed.
+Running \code{python checker-simplified.py --self-test} verified
+three rejections on temporary copies. The checker flagged S020 at
+45,001 lb for exceeding capacity, rejected its late pickup for missing
+the service window, and flagged the second Day 1 tour assigned to T01.
+
+\newpage
+\section{Results and managerial implications}
+
+\textbf{Cost.} The simplified plan costs \textbf{CAD 36,246.15},
+saving CAD 57,052.20 (61.15\%) against all-LTL. The main plan costs
+\textbf{CAD 1,137,319.80}, saving CAD 420,216.05 (26.98\%).
+The main bill comprises CAD 178,739.60 for fleet tours and
+CAD 958,580.20 for LTL. Appendix~\ref{app:results} gives the
+operating results and savings-heuristic comparison.
+
+\textbf{Worked example from the simplified plan.} On Day 1, T01 runs
+the appendix tour for S020 and S017. For this tour \(r^\star\),
+\(a_{\mathrm{S020},r^\star}=a_{\mathrm{S017},r^\star}=1\). Selecting
+\(x_{r^\star}=1\) makes both LTL decisions zero in \eqref{eq:coverage}
+and uses T01's Day 1 slot in \eqref{eq:tractor}. The tour travels
+303 miles and has four service events. The dry trailer's cost is
+\[
+c_{r^\star}=\max\{900,2.20(303)\}+50(4-2)=1{,}000.
+\]
+The two LTL charges total CAD 2,761.15, so the tour saves CAD 1,761.15.
+Peak load is 26,000 lb, 36 ft, and 14 pallets. Across the simplified
+plan, 24 tours serve 52 shipments and eight go by LTL. S007 has no
+generated fleet option. S008 has positive-saving candidates competing
+for tractor-days already assigned to other tours.
+
+\textbf{Main fleet deployment.} Shared tours handle 273 shipments,
+dedicated tours handle 38, and LTL handles 489. All 168 tractor-days
+are used, including all 28 reefer-days. The fleet carries 17 of 78
+chilled shipments. Refrigeration limits tractor choice, and
+compatibility and loading order restrict which shipments can share
+a trailer and in what order they can be delivered. Varied opening
+hours narrow the timing options, and 111 selected tours schedule a
+driver break.
+
+\textbf{Trailer use and service.} In the main plan, weight utilization
+is 16.91\% and floor utilization is 22.22\%, including empty travel.
+Empty legs account for 37,298 of 68,388 fleet miles (54.5\%).
+Elapsed time from pickup completion to delivery completion averages
+about 17 minutes above the direct-trip benchmark, with a four-hour
+maximum. All fleet shipments are picked up and delivered on their
+stated day.
+
+\textbf{Recommendation.} Use shared tours where the avoided LTL
+charges cover the extra stops and detours. Keep dedicated tours
+available when their savings justify a tractor-day. Use LTL when
+the fleet has no suitable candidate or another assignment saves
+more. When comparing tours, consider depot approach and return
+mileage alongside weight and floor utilization.
+
+\textbf{Scope.} Gurobi reported \code{OPTIMAL} with a zero gap to
+reported precision for the 1,592 simplified and 12,533 main
+candidates. The independent checker verified the selected plans
+and charges. The savings reflect the supplied rates and demand.
+
+\clearpage
+\ifnum\value{page}=5\relax\else
+  \errmessage{The appendix must start on page five}
+\fi
+\appendix
+\section{Results for the supplied workbooks}\label{app:results}
+
+\subsection*{Operating results and benchmark}
+
+\begin{center}
+\small
+\begin{tabularx}{\linewidth}{@{}Yrr@{}}
+\toprule
+Measure & Simplified & Main\\
+\midrule
+All-LTL cost (CAD) & 93,298.35 & 1,557,535.85\\
+Savings heuristic cost (CAD) & 41,401.80 & 1,227,702.10\\
+Gurobi cost below heuristic (CAD) & 5,155.65 & 90,382.30\\
+Shipments on shared / dedicated tours / LTL & 52 / 0 / 8 & 273 / 38 / 489\\
+Tractor-days used / available & 24 / 24 & 168 / 168\\
+Weight / floor utilization (\%) & 27.40 / 30.22 & 16.91 / 22.22\\
+Tour miles, including empty legs & 7,698 & 68,388\\
+Empty miles (depot legs only) & 3,242 & 34,953\\
+Empty miles (all empty legs) & 3,242 & 37,298\\
+Added elapsed hours, mean / maximum & 1.83 / 6.50 & 0.29 / 4.00\\
+Candidate tours & 1,592 & 12,533\\
+Status / gap over candidates & Optimal / 0.00\% & Optimal / 0.00\%\\
+Independent feasibility check & Pass & Pass\\
+Generation / Gurobi time (s) & 2.464 / 0.040 & 1.186 / 0.200\\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+For the savings heuristic, use the model's feasible schedules for
+two-shipment tours. Rank pairs by positive savings versus LTL, rounded
+to cents, with ties broken by day, shipment IDs, then tractor ID. Take
+each pair in order if both shipments and its tractor-day are free. Send
+the rest by LTL. Both model scripts report the benchmark.
+
+Utilization is mile-weighted and includes empty legs. Added elapsed
+time runs from pickup completion to delivery completion, less direct
+driving and the same delivery handling. The direct benchmark excludes
+waiting for the delivery window.
+
+\subsection*{Example simplified tour, Day 1, tractor T01}
+
+\begin{center}
+\small
+\begin{tabularx}{\linewidth}{@{}llYr@{}}
+\toprule
+Local time & Location & Event & Onboard lb / ft / pallets\\
+\midrule
+06:30 & D01 & Depart & 0 / 0 / 0\\
+09:00--09:30 & F09 & Pick up S020 & 15,000 / 18 / 6\\
+10:00--10:30 & F05 & Pick up S017 & 26,000 / 36 / 14\\
+12:00--12:30 & F08 & Deliver S017 & 15,000 / 18 / 6\\
+13:30--14:00 & F01 & Deliver S020 & 0 / 0 / 0\\
+15:00 & D01 & Return & 0 / 0 / 0\\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\end{document}

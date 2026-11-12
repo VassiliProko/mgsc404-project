@@ -1,6 +1,6 @@
 # Archive
 
-Earlier work retained for reference. See the [project README](../README.md) for the two submission scripts.
+Earlier work retained for reference. See the [project README](../README.md) for the four submission scripts.
 
 Archived November 6, 2026:
 
@@ -9,4 +9,4 @@ Archived November 6, 2026:
 
 The old model scripts are historical snapshots and may need their data paths adjusted before running from this folder. The exploratory notebook can use either the archived simplified workbook or the current main workbook.
 
-The submission cleanup moved the simplified and alternate models, the older checker, and the [model comparison](report_two_models.md) here. Their simplified input and saved exports are in `data/` and `output/`. The local report draft and its evidence are in `report/`.
+The alternate model and [model comparison](report_two_models.md) are historical. The current simplified model and checker are in the project folder. The archive retains the historical simplified input and exports in its own data and output folders, along with earlier report drafts.
