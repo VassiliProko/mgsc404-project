@@ -1,8 +1,7 @@
 # How this program works:
-#   1. First we make a list of every truck tour that could work (1, 2 or 3
-#      shipments, every possible stop order, every truck). A tour is only
-#      kept if it follows all the rules (routes, time windows, driving and
-#      duty hours, capacity, stop limit) and we work out what it costs.
+#   1. Generate candidate tours before optimizing, as in the snow-plowing
+#      example. For each shipment group and truck, keep the cheapest
+#      feasible schedule. Stop exploring an order as soon as it breaks a rule.
 #   2. Then Gurobi picks the cheapest combination:
 #        variables:   select_tour[r] and use_ltl[i] (both binary)
 #        objective:   minimize total tour cost + total LTL cost
@@ -201,7 +200,7 @@ for k in TRACTORS:
 assert lifo_required == 0, "This file is for side access (lifo_required = 0)"
 
 
-# Step 4: make every possible tour
+# Step 4: generate candidate tours
 def schedule_tour(k, d, sequence, depart, check_duty=True):
     """Simulates one tour stop by stop, for a given stop order and departure time.
     Returns the whole schedule, or None if any rule is broken.
@@ -293,23 +292,52 @@ def best_departure(k, d, sequence):
     return schedule_tour(k, d, sequence, earliest + delay, check_duty=True)
 
 
-def pickup_delivery_orders(group):
-    """All the stop orders where each pickup comes before its own delivery.
-    It's side access, so there's no other rule about the order."""
-    orders = []
+def pickup_delivery_orders(k, d, group):
+    """Build stop orders one event at a time, checking each partial route."""
+    truck = TRACTOR[k]
+    home = truck["home_depot_id"]
+    cap = EQUIP[truck["equipment_id"]]
+    earliest, latest_end = tour_bounds(k, d)
 
-    def extend(seq, picked, delivered):
+    def extend(seq, picked, delivered, now, here, drive, weight, feet, pallets):
         if len(delivered) == len(group):
-            orders.append(list(seq))
+            back = drive_hours(here, home)
+            if now + back <= latest_end + EPS and drive + back <= max_drive_hours + EPS:
+                yield seq
             return
-        for i in group:
-            if i not in picked:
-                extend(seq + [("P", i)], picked | {i}, delivered)
-            elif i not in delivered:
-                extend(seq + [("D", i)], picked, delivered | {i})
 
-    extend([], frozenset(), frozenset())
-    return orders
+        # The earliest departure gives the earliest possible service times.
+        # Waiting can sometimes be reduced by leaving later, so duty is
+        # checked by best_departure after the order is complete.
+        for i in group:
+            if i in delivered:
+                continue
+            pickup = i not in picked
+            stop = ("P" if pickup else "D", i)
+            next_place = location[stop]
+            leg = drive_hours(here, next_place)
+            finish = max(now + leg, earliest_start[stop]) + service_hours[stop]
+            if (finish > min(latest_finish[stop], latest_end) + EPS
+                    or drive + leg > max_drive_hours + EPS):
+                continue
+
+            shipment = SHIP[i]
+            sign = 1 if pickup else -1
+            next_weight = weight + sign * shipment["weight_lb"]
+            next_feet = feet + sign * shipment["linear_feet"]
+            next_pallets = pallets + sign * shipment["pallets"]
+            if (next_weight > cap["weight_capacity_lb"] + EPS
+                    or next_feet > cap["length_capacity_feet"] + EPS
+                    or next_pallets > cap["pallet_capacity"] + EPS):
+                continue
+
+            yield from extend(
+                seq + [stop], picked | {i} if pickup else picked,
+                delivered if pickup else delivered | {i},
+                finish, next_place, drive + leg, next_weight, next_feet, next_pallets,
+            )
+
+    yield from extend([], set(), set(), earliest, home, 0.0, 0.0, 0.0, 0.0)
 
 
 def generate_tours():
@@ -327,12 +355,14 @@ def generate_tours():
     tours = []
     max_shipments = max_stops // 2                       # 6 stops -> max 3 shipments
     for d in DAYS:                                       # tours only use shipments from the same day
-        for key, members in profiles.items():
+        for members in profiles.values():
             k0 = members[0]
             for size in range(1, max_shipments + 1):
+                # A direct leg can take longer than going through another stop.
+                # A failed smaller group can still work as part of a larger one.
                 for group in itertools.combinations(SHIPMENTS_ON_DAY[d], size):
                     best = None
-                    for seq in pickup_delivery_orders(group):
+                    for seq in pickup_delivery_orders(k0, d, group):
                         sch = best_departure(k0, d, seq)
                         if sch is None:
                             continue
