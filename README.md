@@ -9,7 +9,7 @@ This project chooses dedicated tours, shared tours, or outside LTL service to mi
 | Simplified | [Gurobi_Simplified_v4.py](Gurobi_Simplified_v4.py) | [checker-simplified.py](checker-simplified.py) |
 | Main | [Gurobi_Main_V1.py](Gurobi_Main_V1.py) | [checker-full.py](checker-full.py) |
 
-The checker entry points share the workbook-driven verification logic in checker-full.py. The simplified entry point supplies simplified workbook defaults and the three required rejection tests.
+The standalone simplified checker verifies shipment coverage and tractor assignments. The full checker replays routes and recalculates costs for either workbook.
 
 ## Run both models
 
@@ -23,9 +23,10 @@ Each model reads its workbook from data/, prints the all-LTL, greedy-pair, and G
 
 ## Check exported plans independently
 
-    python checker-simplified.py --self-test
+    python checker-simplified.py
+    python checker-full.py --data data/project1_simplified.xlsx --plan output/plan_simplified.xlsx
     python checker-full.py
 
-The simplified command checks the valid plan and demonstrates that temporary test copies with an overload, a missed pickup window, and a double-booked tractor are rejected. Both checker commands accept custom --data and --plan paths.
+Use the full checker commands for route feasibility and cost verification. They accept custom `--data` and `--plan` paths.
 
 Compile report.tex with pdfLaTeX or upload it as the main document in Overleaf. The [model walkthrough](main_model_explained.md), [formulation reference](Variables_Constraints.md), and [archive](archive/README.md) provide supporting material.
