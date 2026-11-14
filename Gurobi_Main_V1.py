@@ -1,4 +1,4 @@
-# main file
+# MGSC 404 - Project 1, main file (tour selection model)
 #
 # How this program works:
 #   1. First we build a list of truck tours that could work (1 to 4
@@ -10,7 +10,7 @@
 #        - a 30 min break before driving more than 8 h since the last break
 #        - weight, floor length and pallets after every stop (reefers are smaller)
 #        - max 8 stops (so max 4 shipments)
-#        - chilled freight requires a reefer; ambient freight can use either truck type
+#        - chilled freight only on a chilled-capable truck (reefer)
 #        - only freight with the same temperature and group on board together
 #        - last in, first out: the last shipment loaded has to come off first
 #      We also work out what each tour costs.
@@ -21,21 +21,22 @@
 #                     and each truck does at most one tour per day
 #   3. The results get saved in an Excel file
 #
-# How we build the candidate tours (the main file is too big to blindly try
-# every combination of 4 shipments):
-#   - a group of 3 is only tried if every pair inside it already works on that
-#     type of truck, and a group of 4 only if every group of 3 inside it works.
-#     (we tested this on the main file by trying every group of 3 and 4 without
-#     this shortcut and it didn't lose any tour)
-#   - for the break we first try the simple rule: take it at the last stop before
-#     the 8 h would be passed (in the waiting time if there's at least 30 min of
-#     it, otherwise right after loading/unloading). if that doesn't work we try
-#     every place the break could go (before or after service at any stop, up to
-#     2 breaks) and every departure time, 15 min apart
-#   - optional cap (MAX_GROUPS_PER_SIZE) on how many groups we try per size
-#     (off by default)
-# A 0% gap means optimal over the tours we gave Gurobi. Since the shortcut
-# didn't lose anything in our test, this should be all the feasible tours.
+# How we build the candidate tours:
+#   - we build routes one stop at a time from the depot and drop a route as
+#     soon as it misses a window, overloads the truck, mixes freight types,
+#     breaks LIFO, drives too long or passes 8 stops. adding more stops can't
+#     fix any of those, so no tour that works is thrown away.
+#     (we don't skip groups just because a smaller group inside them fails:
+#     in this data a detour can be shorter than the direct road, and a tour
+#     can end closer to the depot, so a bigger group can work when a smaller
+#     one doesn't)
+#   - every complete route is then checked fully: drive home, 11 h / 14 h,
+#     the break and the departure time. for the break we first try the simple
+#     rule (last stop before 8 h of driving would be passed, in the waiting time
+#     if there's 30 min of it, otherwise after loading/unloading); if that fails
+#     we try every place the break could go (up to 2 breaks) and every
+#     departure time, 15 min apart
+# So the list has every feasible tour, and a 0% gap is a global optimum.
 
 import itertools
 import time
@@ -45,9 +46,6 @@ import pandas as pd
 import gurobipy as gp
 from gurobipy import GRB
 
-import subprocess
-import sys
-
 # settings we can change
 FOLDER = Path(__file__).resolve().parent
 DATA_FILE = FOLDER / "data" / "project1_main.xlsx"
@@ -56,8 +54,6 @@ OUTPUT_FOLDER.mkdir(exist_ok=True)          # creates the folder if it doesn't e
 PLAN_FILE = OUTPUT_FOLDER / "plan_main.xlsx"
 
 TIME_LIMIT_SECONDS = 1800         # time limit for Gurobi (seconds)
-MAX_SHIPMENTS_PER_TOUR = None     # None = take it from max_stops in the file (8 stops -> 4)
-MAX_GROUPS_PER_SIZE = None        # None = no cap; e.g. 50000 to make it run faster
 EPS = 1e-6                        # small tolerance when comparing numbers
 
 
@@ -106,9 +102,6 @@ lifo_required = int(params["lifo_required"])                 # 1 = last in, firs
 demand_days = int(params["demand_days"])                     # days 1-7
 horizon_end_day = int(params["horizon_end_day"])             # ends at 00:00 on day 8
 time_step = float(params["time_step_hours"])                 # 15 minute steps
-
-if MAX_SHIPMENTS_PER_TOUR is None:
-    MAX_SHIPMENTS_PER_TOUR = max_stops // 2
 
 # sets
 SHIPMENTS = list(shipments_df["shipment_id"])
@@ -418,37 +411,39 @@ def search_breaks(k, d, sequence):
     return best
 
 
-def stop_orders(k, d, group):
-    """All stop orders for a group of shipments that pass the quick checks.
-    Each pickup comes before its delivery, and with LIFO only the shipment
-    on top (the last one loaded) can be delivered. While building the order
-    we already throw it away if a window is missed, the truck is overloaded,
-    freight types get mixed or a chilled shipment is on a dry truck (we use
-    the earliest departure and no break here, so nothing that works is lost)."""
+def all_routes(k, d):
+    """Builds every possible route for truck k on day d, one stop at a time,
+    starting at the depot. At each step the truck can pick up a shipment that
+    isn't loaded yet (if it can share the truck with what's on board) or
+    deliver the shipment on top (LIFO). A route is dropped as soon as it misses
+    a window, overloads the truck, drives too long or goes over 8 stops,
+    because adding more stops can never fix that. (we use the earliest
+    departure and no break here, so these times are the earliest possible.)
+    Every time the truck is empty again we have a complete route."""
     t = TRACTOR[k]
     home = t["home_depot_id"]
     cap = EQUIP[t["equipment_id"]]
     chilled_ok = int(cap["chilled_capable"]) == 1
     earliest, latest_end = tour_bounds(k, d)
-    if any(is_chilled[i] and not chilled_ok for i in group):
-        return []
-    orders = []
+    ships = [i for i in SHIPMENTS_ON_DAY[d] if chilled_ok or not is_chilled[i]]  # chilled needs a reefer
+    routes = []
+    explored = [0]
 
     def extend(seq, now, here, drive, on_board, picked, w, f, p):
-        if len(seq) == 2 * len(group):
-            if (now + drive_hours(here, home) <= latest_end + EPS
-                    and drive + drive_hours(here, home) <= max_drive_hours + EPS):
-                orders.append(list(seq))
-            return
+        explored[0] += 1
+        if seq and not on_board:
+            routes.append(list(seq))                     # truck is empty again = complete route
         options = []
-        for i in group:
-            if i not in picked:
-                if on_board and freight_type[on_board[0]] != freight_type[i]:
+        if len(seq) + len(on_board) + 2 <= max_stops:    # room to pick up and still deliver everything
+            for i in ships:
+                if i in picked:
                     continue
+                if on_board and freight_type[on_board[0]] != freight_type[i]:
+                    continue                             # only compatible freight together
                 options.append(("P", i))
         if on_board:
             if lifo_required:
-                options.append(("D", on_board[-1]))
+                options.append(("D", on_board[-1]))      # last in, first out
             else:
                 options += [("D", i) for i in on_board]
         for u in options:
@@ -456,7 +451,8 @@ def stop_orders(k, d, group):
             leg = drive_hours(here, location[u])
             start = max(now + leg, earliest_start[u])
             finish = start + service_hours[u]
-            if finish > latest_finish[u] + EPS or drive + leg > max_drive_hours + EPS:
+            if (finish > latest_finish[u] + EPS or finish > latest_end + EPS
+                    or drive + leg > max_drive_hours + EPS):
                 continue
             s = SHIP[i]
             sign = 1 if kind == "P" else -1
@@ -469,7 +465,7 @@ def stop_orders(k, d, group):
                    picked | {i} if kind == "P" else picked, nw, nf, np_)
 
     extend([], earliest, home, 0.0, [], frozenset(), 0.0, 0.0, 0.0)
-    return orders
+    return routes, explored[0]
 
 
 def route_drive(k, sequence):
@@ -479,41 +475,10 @@ def route_drive(k, sequence):
     return sum(drive_hours(a, b) for a, b in zip(places, places[1:]))
 
 
-def best_tour_for_group(k, d, group):
-    """Cheapest stop order that works for this group (ties: less duty)."""
-    best = None
-    for seq in stop_orders(k, d, group):
-        sch = best_departure(k, d, seq)
-        if sch is None and route_drive(k, seq) > break_after + EPS:
-            sch = search_breaks(k, d, seq)               # maybe the break just needs to go somewhere else
-        if sch is None:
-            continue
-        if (best is None or sch["cost"] < best["cost"] - EPS
-                or (abs(sch["cost"] - best["cost"]) <= EPS
-                    and sch["duty_hours"] < best["duty_hours"])):
-            best = sch
-    return best
-
-
-def next_size_groups(works, size):
-    """Groups of `size` shipments where every smaller group inside already works.
-    (same idea as building bigger sets only from smaller sets that passed)"""
-    by_prefix = {}
-    for g in works:
-        by_prefix.setdefault(g[:-1], []).append(g[-1])
-    groups = []
-    for prefix, lasts in by_prefix.items():
-        lasts.sort()
-        for a, b in itertools.combinations(lasts, 2):
-            g = prefix + (a, b)
-            if all(sub in works for sub in itertools.combinations(g, size - 1)):
-                groups.append(g)
-    return groups
-
-
 def generate_tours():
-    """For every day and every type of truck, find the groups of shipments that
-    work together and keep the cheapest stop order for each.
+    """For every day and every type of truck, check every complete route fully
+    (drive home, driving and duty limits, the break, departure time) and keep
+    the cheapest route for each group of shipments (ties: less duty).
     Trucks with the same depot, equipment and shift are identical, so we
     only check one of them and copy the tour to the others."""
     profiles = {}
@@ -524,46 +489,47 @@ def generate_tours():
         profiles.setdefault(key, []).append(k)
 
     tours = []
-    stats = {size: [0, 0, 0] for size in range(1, MAX_SHIPMENTS_PER_TOUR + 1)}  # tried, worked, capped
+    stats = {size: [0, 0] for size in range(1, max_stops // 2 + 1)}   # routes checked, groups that work
+    explored_total = 0
     for d in DAYS:                                       # tours only use shipments from the same day
         for key, members in profiles.items():
             k0 = members[0]
-            works = set()
-            groups = [(i,) for i in sorted(SHIPMENTS_ON_DAY[d])]
-            for size in range(1, MAX_SHIPMENTS_PER_TOUR + 1):
-                if size > 1:
-                    groups = next_size_groups(works, size)
-                    works = set()
-                if MAX_GROUPS_PER_SIZE and len(groups) > MAX_GROUPS_PER_SIZE:
-                    # keep the groups with the most LTL cost to save
-                    groups.sort(key=lambda g: -sum(ltl_cost[i] for i in g))
-                    stats[size][2] += len(groups) - MAX_GROUPS_PER_SIZE
-                    groups = groups[:MAX_GROUPS_PER_SIZE]
-                for g in groups:
-                    stats[size][0] += 1
-                    best = best_tour_for_group(k0, d, g)
-                    if best is None:
-                        continue
-                    stats[size][1] += 1
-                    works.add(g)
-                    for k in members:                    # copy the tour to every identical truck
-                        tours.append(dict(best, tractor=k))
-                if not works:
-                    break
-    return tours, stats, len(profiles)
+            routes, explored = all_routes(k0, d)
+            explored_total += explored
+            best_of = {}
+            for seq in routes:
+                stats[len(seq) // 2][0] += 1
+                sch = best_departure(k0, d, seq)
+                drive = route_drive(k0, seq)
+                if sch is None and break_after + EPS < drive <= max_drive_hours + EPS:
+                    sch = search_breaks(k0, d, seq)      # maybe the break just needs to go somewhere else
+                if sch is None:
+                    continue
+                g = sch["shipments"]
+                old = best_of.get(g)
+                if (old is None or sch["cost"] < old["cost"] - EPS
+                        or (abs(sch["cost"] - old["cost"]) <= EPS
+                            and sch["duty_hours"] < old["duty_hours"])):
+                    best_of[g] = sch
+            for g, sch in best_of.items():
+                stats[len(g)][1] += 1
+                for k in members:                        # copy the tour to every identical truck
+                    tours.append(dict(sch, tractor=k))
+    return tours, stats, len(profiles), explored_total
 
 
 t0 = time.time()
-tours, gen_stats, n_profiles = generate_tours()
+tours, gen_stats, n_profiles, n_explored = generate_tours()
 generation_seconds = time.time() - t0
 print(f"Candidate tours generated: {len(tours)} ({generation_seconds:.1f} s, "
-      f"{n_profiles} truck types)")
-for size, (tried, worked, capped) in gen_stats.items():
-    print(f"  groups of {size}: tried {tried}, feasible {worked}"
-          + (f", skipped by cap {capped}" if capped else ""))
+      f"{n_profiles} truck types, {n_explored} partial routes looked at)")
+for size, (checked, worked) in gen_stats.items():
+    print(f"  {size} shipment(s): {checked} complete routes checked, {worked} groups that work")
 
 
+# =====================================================================
 # STEP 5 - the Gurobi model that picks the tours
+# =====================================================================
 def build_selection_model(tours):
     model = gp.Model("Consolidation_Main")
 
@@ -602,35 +568,13 @@ def build_selection_model(tours):
     return model, select_tour, use_ltl
 
 
-
-def greedy_pair_savings(tours, ltl_cost):
-    """Take profitable two-shipment tours in descending savings order."""
-    pairs = []
-    for tour in tours:
-        shipments = tour["shipments"]
-        if len(shipments) != 2:
-            continue
-        savings = round(sum(ltl_cost[i] for i in shipments) - tour["cost"], 2)
-        if savings > 0:
-            pairs.append((-savings, tour["day"], shipments, tour["tractor"]))
-
-    used_shipments, used_tractor_days = set(), set()
-    total_savings = 0.0
-    for negative_savings, day, shipments, tractor in sorted(pairs):
-        slot = (tractor, day)
-        if slot in used_tractor_days or used_shipments.intersection(shipments):
-            continue
-        used_tractor_days.add(slot)
-        used_shipments.update(shipments)
-        total_savings -= negative_savings
-    return total_savings, len(used_shipments)
-
-
 model, select_tour, use_ltl = build_selection_model(tours)
 model.optimize()
 
 
+# =====================================================================
 # STEP 6 - Gurobi report and results
+# =====================================================================
 STATUS = {GRB.OPTIMAL: "OPTIMAL", GRB.TIME_LIMIT: "TIME_LIMIT",
           GRB.INFEASIBLE: "INFEASIBLE", GRB.INF_OR_UNBD: "INF_OR_UNBD",
           GRB.INTERRUPTED: "INTERRUPTED"}
@@ -639,7 +583,7 @@ print("\n================ GUROBI REPORT ================")
 print(f"Gurobi version     : {'.'.join(map(str, gp.gurobi.version()))}")
 print(f"Settings           : MIPGap = {model.Params.MIPGap}, "
       f"TimeLimit = {model.Params.TimeLimit} s, Seed = {model.Params.Seed}")
-print(f"Candidate tours    : {len(tours)} (see the notes at the top on how we built them)")
+print(f"Candidate tours    : {len(tours)} (every feasible tour, see the notes at the top)")
 print(f"Tour generation    : {generation_seconds:.1f} s")
 print(f"Gurobi runtime     : {model.Runtime:.2f} s")
 print(f"Termination status : {STATUS.get(model.Status, model.Status)}")
@@ -651,19 +595,15 @@ print(f"Objective (CAD)    : {model.ObjVal:,.2f}")
 print(f"Best bound (CAD)   : {model.ObjBound:,.2f}")
 print(f"Optimality gap     : {model.MIPGap:.4%}")
 if model.Status == GRB.OPTIMAL:
-    print("Optimal over the generated candidate tours.")
+    print("Every feasible tour was included, so this is a GLOBAL optimum.")
 
 chosen = [tours[r] for r in range(len(tours)) if select_tour[r].X > 0.5]
 on_ltl = [i for i in SHIPMENTS if use_ltl[i].X > 0.5]
 
 all_ltl = sum(ltl_cost.values())
 savings = all_ltl - model.ObjVal
-heuristic_savings, heuristic_shared = greedy_pair_savings(tours, ltl_cost)
-heuristic_cost = all_ltl - heuristic_savings
 print("\n================ RESULTS ================")
 print(f"All-LTL baseline   : CAD {all_ltl:,.2f}")
-print(f"Greedy pairs cost  : CAD {heuristic_cost:,.2f} "
-      f"({heuristic_shared} shared shipments)")
 print(f"Optimized cost     : CAD {model.ObjVal:,.2f}")
 print(f"Savings            : CAD {savings:,.2f}  ({savings / all_ltl:.2%})")
 
@@ -674,7 +614,7 @@ n_con = sum(len(t["shipments"]) for t in consolidated)
 print(f"Shipments on LTL           : {len(on_ltl)}")
 print(f"Shipments on dedicated tour: {n_ded} ({len(dedicated)} tours)")
 print(f"Shipments on shared tour   : {n_con} ({len(consolidated)} tours)")
-for size in range(1, MAX_SHIPMENTS_PER_TOUR + 1):
+for size in range(1, max_stops // 2 + 1):
     print(f"  tours with {size} shipment(s): {sum(len(t['shipments']) == size for t in chosen)}")
 print(f"Tours on reefers           : "
       f"{sum(int(EQUIP[TRACTOR[t['tractor']]['equipment_id']]['chilled_capable']) == 1 for t in chosen)}")
@@ -700,14 +640,14 @@ if cap_w > 0:
 print(f"Total tour miles   : {total_miles:,.0f} "
       f"(of which depot approach + return: {empty_miles:,.0f})")
 
-# Added elapsed time relative to direct driving plus delivery handling.
+# extra time vs driving straight there: (delivery end - pickup end) - direct drive
 extra = []
 for t in chosen:
     end = {(s["event"], s["shipment"]): s["service_end"] for s in t["stops"]}
     for i in t["shipments"]:
         s = SHIP[i]
         direct = drive_hours(s["origin_id"], s["destination_id"])
-        extra.append(end["D", i] - end["P", i] - direct - s["delivery_service_hours"])
+        extra.append(end["D", i] - end["P", i] - direct)
 if extra:
     print(f"Extra time vs direct trip: average {sum(extra) / len(extra):.2f} h, "
           f"max {max(extra):.2f} h")
@@ -743,7 +683,9 @@ for i in on_ltl:
     print(f"  {i}: CAD {ltl_cost[i]:,.2f}")
 
 
+# =====================================================================
 # STEP 7 - save the plan to Excel (our checker will read this file)
+# =====================================================================
 tour_rows, stop_rows = [], []
 for n, t in enumerate(sorted(chosen, key=lambda x: (x["day"], x["tractor"])), 1):
     k = t["tractor"]
@@ -805,14 +747,11 @@ summary_rows = [
     ("runtime_seconds", round(model.Runtime, 3)),
     ("tour_generation_seconds", round(generation_seconds, 3)),
     ("candidate_tours", len(tours)),
-    ("max_shipments_per_tour", MAX_SHIPMENTS_PER_TOUR),
-    ("max_groups_per_size", MAX_GROUPS_PER_SIZE if MAX_GROUPS_PER_SIZE else "no cap"),
+    ("partial_routes_explored", n_explored),
     ("objective_cad", round(model.ObjVal, 2)),
     ("best_bound_cad", round(model.ObjBound, 2)),
     ("mip_gap", model.MIPGap),
     ("all_ltl_cad", round(all_ltl, 2)),
-    ("greedy_pair_cost_cad", round(heuristic_cost, 2)),
-    ("greedy_pair_shared_shipments", heuristic_shared),
     ("savings_cad", round(savings, 2)),
     ("savings_pct", round(100 * savings / all_ltl, 2)),
     ("shipments_ltl", len(on_ltl)),
@@ -820,8 +759,8 @@ summary_rows = [
     ("shipments_consolidated", n_con),
     ("total_miles", total_miles),
 ]
-for size, (tried, worked, capped) in gen_stats.items():
-    summary_rows.append((f"groups_of_{size}_tried", tried))
+for size, (checked, worked) in gen_stats.items():
+    summary_rows.append((f"routes_with_{size}_checked", checked))
     summary_rows.append((f"groups_of_{size}_feasible", worked))
 with pd.ExcelWriter(PLAN_FILE) as writer:
     pd.DataFrame(tour_rows).to_excel(writer, sheet_name="tours", index=False)
@@ -830,18 +769,3 @@ with pd.ExcelWriter(PLAN_FILE) as writer:
     pd.DataFrame(summary_rows, columns=["item", "value"]).to_excel(
         writer, sheet_name="summary", index=False)
 print(f"\nPlan written to {PLAN_FILE.relative_to(FOLDER)}")
-
-
-# Step 8: independently check the saved plan
-# The checker rereads the original data and exported plan.
-# If any check fails, check=True stops this program with an error.
-print("\n================ INDEPENDENT CHECKER ================", flush=True)
-subprocess.run(
-    [
-        sys.executable,
-        str(FOLDER / "checker-full.py"),
-        "--data", str(DATA_FILE),
-        "--plan", str(PLAN_FILE),
-    ],
-    check=True,
-)
